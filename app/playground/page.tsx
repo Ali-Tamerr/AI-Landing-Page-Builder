@@ -135,10 +135,13 @@ function PlaygroundContent() {
     } else {
       const chatIndex = newChats.findIndex(c => c.id === activeChatId)
       if (chatIndex >= 0) {
-        newChats[chatIndex].messages = [...newChats[chatIndex].messages, userMessage]
-        newChats[chatIndex].updatedAt = Date.now()
-        const chat = newChats.splice(chatIndex, 1)[0]
-        newChats.unshift(chat)
+        const updatedChat = {
+          ...newChats[chatIndex],
+          messages: [...newChats[chatIndex].messages, userMessage],
+          updatedAt: Date.now()
+        }
+        newChats.splice(chatIndex, 1)
+        newChats.unshift(updatedChat)
       }
     }
     
@@ -172,7 +175,13 @@ function PlaygroundContent() {
         const updated = [...current]
         const idx = updated.findIndex(c => c.id === activeChatId)
         if (idx >= 0) {
-          updated[idx].messages.push({ id: modelMessageId, role: 'model', content: '' })
+          const chat = updated[idx]
+          if (!chat.messages.some(m => m.id === modelMessageId)) {
+            updated[idx] = {
+              ...chat,
+              messages: [...chat.messages, { id: modelMessageId, role: 'model', content: '' }]
+            }
+          }
         }
         return updated
       })
@@ -189,10 +198,11 @@ function PlaygroundContent() {
           const updated = [...current]
           const idx = updated.findIndex(c => c.id === activeChatId)
           if (idx >= 0) {
-            const msgs = [...updated[idx].messages]
+            const chat = updated[idx]
+            const msgs = [...chat.messages]
             if (msgs.length > 0 && msgs[msgs.length - 1].role === 'model') {
               msgs[msgs.length - 1] = { ...msgs[msgs.length - 1], content: fullOutput }
-              updated[idx].messages = msgs
+              updated[idx] = { ...chat, messages: msgs }
             }
           }
           return updated
