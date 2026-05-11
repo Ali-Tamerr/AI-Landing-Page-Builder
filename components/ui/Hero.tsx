@@ -47,17 +47,6 @@ export function Hero() {
             </Button>
           </motion.div>
           
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-            className="mt-16 flex items-center justify-center gap-8 text-gray-400 grayscale opacity-70"
-          >
-            {/* Logos placeholder */}
-            <span className="font-bold text-xl">Klarna.</span>
-            <span className="font-bold text-xl">coinbase</span>
-            <span className="font-bold text-xl">instacart</span>
-          </motion.div>
         </div>
       </div>
     </section>

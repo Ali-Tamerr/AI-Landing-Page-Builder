@@ -19,12 +19,12 @@
   --color-brand-dark: var(--dark-section);
   --color-brand-muted: var(--muted);
   --color-brand-border: var(--border);
+  --font-sans: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
 }
 
 body {
   background-color: var(--background);
   color: var(--foreground);
-  font-family: var(--font-inter), sans-serif;
   overflow-x: hidden;
 }
 
