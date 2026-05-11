@@ -1,7 +1,7 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { Search, Globe, Share2, Zap, Layout, BarChart } from "lucide-react"
+import { Search, Globe, Share2, Zap, Layout } from "lucide-react"
 
 const features = [
   {

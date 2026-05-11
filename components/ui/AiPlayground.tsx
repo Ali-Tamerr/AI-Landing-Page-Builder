@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Sparkles, Send, Loader2 } from "lucide-react"
 import { Button } from "./Button"
