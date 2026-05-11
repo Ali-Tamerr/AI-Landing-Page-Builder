@@ -9,7 +9,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Prompt is required" }, { status: 400 });
     }
 
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = process.env.COPYAI_GEMINI_API_KEY;
     if (!apiKey || apiKey === "YOUR_GEMINI_API_KEY_HERE") {
       return NextResponse.json(
         { error: "API key not configured in .env" },
@@ -18,7 +18,7 @@ export async function POST(req: Request) {
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+    const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
 
     const result = await model.generateContentStream(prompt);
     

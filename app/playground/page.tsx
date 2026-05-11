@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { ArrowLeft, Sparkles, Send, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/Button"
 import Link from "next/link"
+import ReactMarkdown from "react-markdown"
 
 function PlaygroundContent() {
   const searchParams = useSearchParams()
@@ -127,9 +128,24 @@ function PlaygroundContent() {
               <motion.div 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="text-gray-800 text-base sm:text-lg leading-relaxed whitespace-pre-wrap font-sans max-w-3xl"
+                className="text-gray-800 text-base sm:text-lg leading-relaxed font-sans max-w-3xl"
               >
-                {output}
+                <ReactMarkdown
+                  components={{
+                    h1: ({node, ...props}) => <h1 className="text-3xl font-bold mt-8 mb-4 text-gray-900" {...props} />,
+                    h2: ({node, ...props}) => <h2 className="text-2xl font-bold mt-8 mb-4 text-gray-900" {...props} />,
+                    h3: ({node, ...props}) => <h3 className="text-xl font-bold mt-6 mb-3 text-gray-900" {...props} />,
+                    p: ({node, ...props}) => <p className="mb-4 text-gray-700 leading-relaxed" {...props} />,
+                    ul: ({node, ...props}) => <ul className="list-disc pl-6 mb-4 space-y-2 text-gray-700" {...props} />,
+                    ol: ({node, ...props}) => <ol className="list-decimal pl-6 mb-4 space-y-2 text-gray-700" {...props} />,
+                    li: ({node, ...props}) => <li className="" {...props} />,
+                    strong: ({node, ...props}) => <strong className="font-bold text-gray-900" {...props} />,
+                    a: ({node, ...props}) => <a className="text-brand-primary hover:underline" {...props} />,
+                    blockquote: ({node, ...props}) => <blockquote className="border-l-4 border-brand-primary pl-4 py-1 italic text-gray-600 bg-gray-50 my-4 rounded-r-lg" {...props} />
+                  }}
+                >
+                  {output}
+                </ReactMarkdown>
                 {isGenerating && (
                   <motion.span 
                     animate={{ opacity: [1, 0] }} 
