@@ -21,7 +21,12 @@ function PlaygroundContent() {
   // Auto-run if there's an initial prompt
   useEffect(() => {
     if (initialPrompt && !output && !isGenerating && !error) {
-      handleGenerate(undefined, initialPrompt)
+      const savedOutput = localStorage.getItem(`copyai_prompt_${initialPrompt}`)
+      if (savedOutput) {
+        setOutput(savedOutput)
+      } else {
+        handleGenerate(undefined, initialPrompt)
+      }
     }
   }, [initialPrompt])
 
@@ -50,12 +55,18 @@ function PlaygroundContent() {
 
       const reader = res.body.getReader()
       const decoder = new TextDecoder()
+      let fullOutput = ""
       
       while (true) {
         const { done, value } = await reader.read()
-        if (done) break
+        if (done) {
+          // Save to local storage when completely finished
+          localStorage.setItem(`copyai_prompt_${promptText}`, fullOutput)
+          break
+        }
         
         const chunk = decoder.decode(value, { stream: true })
+        fullOutput += chunk
         setOutput((prev) => prev + chunk)
       }
     } catch (err: any) {
