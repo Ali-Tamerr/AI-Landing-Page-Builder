@@ -32,16 +32,18 @@ function PlaygroundContent() {
       try {
         const parsed = JSON.parse(savedChats)
         
-        // Auto-fix any older duplicate IDs from previous bugs
+        // Auto-fix any older duplicate IDs from previous bugs and remove empty model artifacts
         const fixedChats = parsed.map((chat: Chat) => {
           const seenIds = new Set<string>()
-          chat.messages = chat.messages.map((msg: Message) => {
-            if (seenIds.has(msg.id)) {
-              msg.id = `msg-fixed-${Math.random().toString(36).substr(2, 9)}`
-            }
-            seenIds.add(msg.id)
-            return msg
-          })
+          chat.messages = chat.messages
+            .filter((msg: Message) => !(msg.role === 'model' && !msg.content.trim()))
+            .map((msg: Message) => {
+              if (seenIds.has(msg.id)) {
+                msg.id = `msg-fixed-${Math.random().toString(36).substr(2, 9)}`
+              }
+              seenIds.add(msg.id)
+              return msg
+            })
           return chat
         })
         
