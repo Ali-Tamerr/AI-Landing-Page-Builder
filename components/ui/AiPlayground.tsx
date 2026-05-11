@@ -34,40 +34,37 @@ export function AiPlayground() {
   }
 
   return (
-    <section className="py-24 bg-brand-dark" id="playground">
+    <section className="py-24 bg-white" id="playground">
       <div className="container mx-auto px-4 max-w-4xl">
         <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4 text-white">Experience the Magic</h2>
-          <p className="text-slate-400">Try our live playground and see the AI in action.</p>
+          <span className="text-brand-primary text-sm font-bold uppercase tracking-wider mb-2 block">Interactive Demo</span>
+          <h2 className="text-3xl md:text-5xl font-extrabold mb-4 text-gray-900 tracking-tight">Experience that grows<br />with your scale.</h2>
         </div>
 
-        <div className="glass rounded-2xl p-6 md:p-8 relative overflow-hidden group border border-white/10 hover:border-brand-primary/50 transition-colors duration-500">
-          {/* Glowing border effect */}
-          <div className="absolute inset-0 bg-gradient-to-r from-brand-primary/20 to-brand-cyan/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-          
+        <div className="clean-card p-6 md:p-8 bg-brand-bg transition-colors duration-500 relative">
           <div className="relative z-10 flex flex-col gap-6">
             <form onSubmit={handleGenerate} className="flex flex-col md:flex-row gap-4">
               <input 
                 type="text" 
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="What do you want to write about? (e.g. 'A landing page for a CRM')"
-                className="flex-1 bg-brand-surface border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-transparent transition-all"
+                placeholder="What do you want to write about?"
+                className="flex-1 bg-white border border-brand-border rounded-xl px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-transparent transition-all shadow-sm"
               />
-              <Button type="submit" size="lg" disabled={isGenerating || !input} className="gap-2 shrink-0">
+              <Button type="submit" size="lg" disabled={isGenerating || !input} className="gap-2 shrink-0 rounded-xl px-8 h-[50px]">
                 {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                 Generate
               </Button>
             </form>
 
-            <div className="bg-brand-surface/50 rounded-xl border border-white/5 min-h-[200px] p-6 text-slate-300 font-mono text-sm leading-relaxed whitespace-pre-wrap">
+            <div className="bg-white rounded-xl border border-brand-border min-h-[200px] p-6 text-gray-700 font-mono text-sm leading-relaxed whitespace-pre-wrap shadow-sm">
               <AnimatePresence mode="wait">
                 {!output && !isGenerating ? (
                   <motion.div 
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="h-full flex items-center justify-center text-slate-500"
+                    className="h-full flex items-center justify-center text-gray-400"
                   >
                     AI output will appear here...
                   </motion.div>

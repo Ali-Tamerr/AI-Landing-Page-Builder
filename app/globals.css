@@ -1,33 +1,37 @@
 @import "tailwindcss";
 
 :root {
-  --background: #020617; /* Slate 950 */
-  --foreground: #f8fafc; /* Slate 50 */
-  --surface: #0f172a;    /* Slate 900 */
-  --primary: #8b5cf6;    /* Violet 500 */
-  --accent: #22d3ee;     /* Cyan 400 */
+  --background: #F9FAFB; /* Light gray background */
+  --foreground: #111827; /* Dark slate text */
+  --surface: #FFFFFF;    /* White cards */
+  --primary: #189898;    /* Teal */
+  --primary-hover: #137777;
+  --dark-section: #092B34; /* Deep teal/slate for dark sections */
+  --muted: #6B7280;      /* Muted text */
+  --border: #E5E7EB;     /* Light borders */
 }
 
 @theme inline {
-  --color-brand-dark: var(--background);
-  --color-brand-primary: var(--primary);
-  --color-brand-cyan: var(--accent);
+  --color-brand-bg: var(--background);
   --color-brand-surface: var(--surface);
-  
-  --background-image-radial-glow: radial-gradient(circle, rgba(139, 92, 246, 0.1) 0%, transparent 80%);
+  --color-brand-primary: var(--primary);
+  --color-brand-primary-hover: var(--primary-hover);
+  --color-brand-dark: var(--dark-section);
+  --color-brand-muted: var(--muted);
+  --color-brand-border: var(--border);
 }
 
 body {
   background-color: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-inter), sans-serif;
   overflow-x: hidden;
 }
 
-/* Glassmorphism utilities */
-@utility glass {
-  background: rgba(15, 23, 42, 0.6);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+/* Base utility for clean cards */
+@utility clean-card {
+  background-color: var(--surface);
+  border-radius: 1.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  border: 1px solid var(--border);
 }

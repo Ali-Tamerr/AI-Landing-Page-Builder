@@ -7,7 +7,7 @@ const features = [
   {
     title: "SEO Optimized Output",
     description: "Generate copy that ranks higher on Google automatically.",
-    icon: <Search className="w-6 h-6 text-brand-accent" />,
+    icon: <Search className="w-6 h-6 text-brand-primary" />,
     className: "md:col-span-2",
   },
   {
@@ -25,24 +25,25 @@ const features = [
   {
     title: "Lightning Fast",
     description: "Get results in milliseconds with our custom infrastructure.",
-    icon: <Zap className="w-6 h-6 text-yellow-400" />,
+    icon: <Zap className="w-6 h-6 text-brand-primary" />,
     className: "md:col-span-1",
   },
   {
     title: "Beautiful Templates",
     description: "Start with proven, high-converting templates.",
-    icon: <Layout className="w-6 h-6 text-pink-400" />,
+    icon: <Layout className="w-6 h-6 text-brand-primary" />,
     className: "md:col-span-1",
   },
 ]
 
 export function FeatureGrid() {
   return (
-    <section className="py-24 bg-brand-surface relative overflow-hidden" id="features">
+    <section className="py-24 bg-brand-bg relative overflow-hidden" id="features">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-5xl font-bold mb-4 text-white">Everything you need</h2>
-          <p className="text-slate-400 max-w-2xl mx-auto">
+          <span className="text-brand-primary text-sm font-bold uppercase tracking-wider mb-2 block">Why they prefer CopyAI</span>
+          <h2 className="text-3xl md:text-5xl font-extrabold mb-4 text-gray-900 tracking-tight">Everything you need</h2>
+          <p className="text-brand-muted max-w-2xl mx-auto">
             Powerful features designed to help you create better content, faster and more efficiently.
           </p>
         </div>
@@ -55,13 +56,13 @@ export function FeatureGrid() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-100px" }}
               transition={{ duration: 0.5, delay: idx * 0.1 }}
-              className={`glass rounded-2xl p-8 border border-white/5 hover:border-brand-primary/40 transition-colors duration-300 group ${feature.className}`}
+              className={`clean-card p-8 group ${feature.className}`}
             >
-              <div className="bg-brand-dark/50 w-12 h-12 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+              <div className="bg-brand-primary/10 w-12 h-12 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                 {feature.icon}
               </div>
-              <h3 className="text-xl font-semibold text-white mb-2">{feature.title}</h3>
-              <p className="text-slate-400 leading-relaxed">{feature.description}</p>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">{feature.title}</h3>
+              <p className="text-brand-muted leading-relaxed">{feature.description}</p>
             </motion.div>
           ))}
         </div>
