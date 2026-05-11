@@ -7,6 +7,17 @@ import { ArrowRight } from "lucide-react"
 export function Hero() {
   return (
     <section className="relative pt-32 pb-20 md:pt-48 md:pb-32 bg-brand-bg overflow-hidden" id="hero">
+      {/* Infinite Grid Background */}
+      <div 
+        className="absolute inset-0 pointer-events-none z-0"
+        style={{
+          backgroundImage: `linear-gradient(to right, rgba(0, 0, 0, 0.04) 1px, transparent 1px), linear-gradient(to bottom, rgba(0, 0, 0, 0.04) 1px, transparent 1px)`,
+          backgroundSize: `40px 40px`,
+          maskImage: `linear-gradient(to bottom, transparent, black 10%, black 90%, transparent)`,
+          WebkitMaskImage: `radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%)`
+        }}
+      />
+      
       <div className="container mx-auto px-4 relative z-10">
         <div className="max-w-4xl mx-auto text-center">
           <motion.h1

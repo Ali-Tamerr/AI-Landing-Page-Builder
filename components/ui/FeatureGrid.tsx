@@ -39,7 +39,17 @@ const features = [
 export function FeatureGrid() {
   return (
     <section className="py-24 bg-brand-bg relative overflow-hidden" id="features">
-      <div className="container mx-auto px-4">
+      {/* Infinite Grid Background */}
+      <div 
+        className="absolute inset-0 pointer-events-none z-0"
+        style={{
+          backgroundImage: `linear-gradient(to right, rgba(0, 0, 0, 0.04) 1px, transparent 1px), linear-gradient(to bottom, rgba(0, 0, 0, 0.04) 1px, transparent 1px)`,
+          backgroundSize: `40px 40px`,
+          maskImage: `linear-gradient(to bottom, transparent, black 10%, black 90%, transparent)`,
+          WebkitMaskImage: `radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%)`
+        }}
+      />
+      <div className="container mx-auto px-4 relative z-10">
         <div className="text-center mb-16">
           <span className="text-brand-primary text-sm font-bold uppercase tracking-wider mb-2 block">Why they prefer CopyAI</span>
           <h2 className="text-3xl md:text-5xl font-extrabold mb-4 text-gray-900 tracking-tight">Everything you need</h2>

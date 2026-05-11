@@ -27,8 +27,18 @@ export function Footer() {
       </section>
 
       {/* Main Footer */}
-      <footer className="border-t border-brand-border bg-brand-bg pt-16 pb-8">
-        <div className="container mx-auto px-4">
+      <footer className="border-t border-brand-border bg-brand-bg pt-16 pb-8 relative overflow-hidden">
+        {/* Infinite Grid Background */}
+        <div 
+          className="absolute inset-0 pointer-events-none z-0"
+          style={{
+            backgroundImage: `linear-gradient(to right, rgba(0, 0, 0, 0.04) 1px, transparent 1px), linear-gradient(to bottom, rgba(0, 0, 0, 0.04) 1px, transparent 1px)`,
+            backgroundSize: `40px 40px`,
+            maskImage: `linear-gradient(to bottom, transparent, black 10%, black 90%, transparent)`,
+            WebkitMaskImage: `radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%)`
+          }}
+        />
+        <div className="container mx-auto px-4 relative z-10">
           <div className="grid grid-cols-2 md:grid-cols-5 gap-8 mb-12">
             <div className="col-span-2">
               <Link href="/" className="flex items-center gap-2 mb-4">
