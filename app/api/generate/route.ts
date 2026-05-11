@@ -3,10 +3,17 @@ import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
   try {
-    const { prompt } = await req.json();
+    const body = await req.json();
+    
+    // Support both old {prompt} format and new {messages} format for safety
+    let messages = body.messages;
+    
+    if (!messages && body.prompt) {
+      messages = [{ role: 'user', content: body.prompt }];
+    }
 
-    if (!prompt) {
-      return NextResponse.json({ error: "Prompt is required" }, { status: 400 });
+    if (!messages || !Array.isArray(messages) || messages.length === 0) {
+      return NextResponse.json({ error: "Messages array is required" }, { status: 400 });
     }
 
     const apiKey = process.env.COPYAI_GEMINI_API_KEY;
@@ -20,9 +27,17 @@ export async function POST(req: Request) {
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
 
-    const result = await model.generateContentStream(prompt);
+    // Extract history (all except last message)
+    const history = messages.slice(0, -1).map((msg: any) => ({
+      role: msg.role === 'user' ? 'user' : 'model',
+      parts: [{ text: msg.content }],
+    }));
     
-    // We can use a readable stream to stream the response back
+    const latestMessage = messages[messages.length - 1].content;
+
+    const chat = model.startChat({ history });
+    const result = await chat.sendMessageStream(latestMessage);
+    
     const stream = new ReadableStream({
       async start(controller) {
         for await (const chunk of result.stream) {
