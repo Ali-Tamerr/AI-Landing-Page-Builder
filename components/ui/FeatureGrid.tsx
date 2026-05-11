@@ -7,31 +7,31 @@ const features = [
   {
     title: "SEO Optimized Output",
     description: "Generate copy that ranks higher on Google automatically.",
-    icon: <Search className="w-6 h-6 text-brand-primary" />,
+    icon: <Search className="w-5 h-5 text-gray-700 group-hover:text-brand-primary transition-colors" />,
     className: "md:col-span-2",
   },
   {
     title: "Multi-Language Support",
     description: "Translate and localize content in 30+ languages.",
-    icon: <Globe className="w-6 h-6 text-brand-primary" />,
+    icon: <Globe className="w-5 h-5 text-gray-700 group-hover:text-brand-primary transition-colors" />,
     className: "md:col-span-1",
   },
   {
     title: "Social Media Ready",
     description: "Pre-formatted posts for Twitter, LinkedIn, and more.",
-    icon: <Share2 className="w-6 h-6 text-brand-primary" />,
+    icon: <Share2 className="w-5 h-5 text-gray-700 group-hover:text-brand-primary transition-colors" />,
     className: "md:col-span-1",
   },
   {
     title: "Lightning Fast",
     description: "Get results in milliseconds with our custom infrastructure.",
-    icon: <Zap className="w-6 h-6 text-brand-primary" />,
+    icon: <Zap className="w-5 h-5 text-gray-700 group-hover:text-brand-primary transition-colors" />,
     className: "md:col-span-1",
   },
   {
     title: "Beautiful Templates",
     description: "Start with proven, high-converting templates.",
-    icon: <Layout className="w-6 h-6 text-brand-primary" />,
+    icon: <Layout className="w-5 h-5 text-gray-700 group-hover:text-brand-primary transition-colors" />,
     className: "md:col-span-1",
   },
 ]
@@ -68,7 +68,7 @@ export function FeatureGrid() {
               transition={{ duration: 0.5, delay: idx * 0.1 }}
               className={`clean-card p-8 group ${feature.className}`}
             >
-              <div className="bg-brand-primary/10 w-12 h-12 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+              <div className="w-12 h-12 rounded-xl bg-gray-50 border border-brand-border shadow-sm flex items-center justify-center mb-6 group-hover:scale-110 group-hover:border-brand-primary/30 transition-all duration-300">
                 {feature.icon}
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-2">{feature.title}</h3>
