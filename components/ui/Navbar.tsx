@@ -12,7 +12,7 @@ export function Navbar() {
         <nav className="hidden md:flex absolute left-1/2 -translate-x-1/2 items-center gap-8 text-sm font-medium text-brand-muted">
           <Link href="/#features" className="hover:text-gray-900 transition-colors">Features</Link>
           <Link href="/#playground" className="hover:text-gray-900 transition-colors">Playground</Link>
-          <Link href="/pricing" className="hover:text-gray-900 transition-colors">Pricing</Link>
+          <Link href="/#pricing" className="hover:text-gray-900 transition-colors">Pricing</Link>
         </nav>
         <div className="flex items-center gap-4 z-10">
           <Button variant="outline" asChild className="hidden sm:inline-flex rounded-full px-6 border-brand-border text-gray-900">

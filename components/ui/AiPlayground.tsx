@@ -2,6 +2,7 @@
 
 import { ArrowRight } from "lucide-react"
 import { Button } from "./Button"
+import Link from "next/link"
 
 export function AiPlayground() {
   return (
@@ -19,9 +20,11 @@ export function AiPlayground() {
               placeholder="Your business email" 
               className="w-full sm:flex-1 h-12 px-5 py-4 rounded-full border border-brand-border bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand-primary text-base sm:text-lg shadow-sm"
             />
-            <Button size="lg" className="w-full sm:w-auto rounded-full gap-2 px-8 h-14 shrink-0 text-base sm:text-lg">
-              Get Started
-              <ArrowRight className="w-5 h-5" />
+            <Button size="lg" asChild className="w-full sm:w-auto rounded-full gap-2 px-8 h-14 shrink-0 text-base sm:text-lg">
+              <Link href="/register">
+                Get Started
+                <ArrowRight className="w-5 h-5" />
+              </Link>
             </Button>
           </div>
         </div>

@@ -4,6 +4,7 @@ import { useState } from "react"
 import { motion } from "framer-motion"
 import { Check, ArrowRight } from "lucide-react"
 import { Button } from "./Button"
+import Link from "next/link"
 
 export function PricingToggle() {
   const [isYearly, setIsYearly] = useState(false)
@@ -34,9 +35,18 @@ export function PricingToggle() {
       isPopular: false,
     }
   ]
-
   return (
-    <section className="py-24 bg-white relative" id="pricing">
+    <section className="py-24 bg-brand-bg relative overflow-hidden" id="pricing">
+      {/* Infinite Grid Background */}
+      <div 
+        className="absolute inset-0 pointer-events-none z-0"
+        style={{
+          backgroundImage: `linear-gradient(to right, rgba(0, 0, 0, 0.07) 1px, transparent 1px), linear-gradient(to bottom, rgba(0, 0, 0, 0.07) 1px, transparent 1px)`,
+          backgroundSize: `40px 40px`,
+          maskImage: `linear-gradient(to bottom, transparent, black 10%, black 90%, transparent)`,
+          WebkitMaskImage: `radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%)`
+        }}
+      />
       <div className="container mx-auto px-4 relative z-10">
         <div className="text-center mb-16">
           <span className="text-brand-primary text-sm font-bold uppercase tracking-wider mb-2 block">Choose Plan</span>
@@ -100,7 +110,8 @@ export function PricingToggle() {
                 ))}
               </ul>
               
-              <button 
+              <Link 
+                href="/register"
                 className={`w-full py-4 rounded-xl flex justify-center items-center gap-2 font-semibold transition-all ${
                   plan.isPopular 
                     ? 'bg-white text-brand-primary hover:bg-gray-50' 
@@ -109,7 +120,7 @@ export function PricingToggle() {
               >
                 Get Started
                 <ArrowRight className="w-4 h-4" />
-              </button>
+              </Link>
             </motion.div>
           ))}
         </div>
