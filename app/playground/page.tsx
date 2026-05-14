@@ -310,23 +310,35 @@ function PlaygroundContent() {
                     <p className="whitespace-pre-wrap text-base sm:text-lg">{msg.content}</p>
                   ) : (
                     <div className="prose prose-sm sm:prose-base max-w-none prose-headings:text-gray-900 prose-p:text-gray-700 prose-a:text-brand-primary">
-                      <ReactMarkdown
-                        components={{
-                          h1: ({node, ...props}) => <h1 className="text-2xl sm:text-3xl font-bold mt-6 mb-4" {...props} />,
-                          h2: ({node, ...props}) => <h2 className="text-xl sm:text-2xl font-bold mt-6 mb-4" {...props} />,
-                          h3: ({node, ...props}) => <h3 className="text-lg sm:text-xl font-bold mt-4 mb-2" {...props} />,
-                          p: ({node, ...props}) => <p className="mb-4 leading-relaxed" {...props} />,
-                          ul: ({node, ...props}) => <ul className="list-disc pl-6 mb-4 space-y-2" {...props} />,
-                          ol: ({node, ...props}) => <ol className="list-decimal pl-6 mb-4 space-y-2" {...props} />,
-                          li: ({node, ...props}) => <li className="" {...props} />,
-                          strong: ({node, ...props}) => <strong className="font-bold text-gray-900" {...props} />,
-                          blockquote: ({node, ...props}) => <blockquote className="border-l-4 border-brand-primary pl-4 py-1 italic text-gray-600 bg-gray-50 my-4 rounded-r-lg" {...props} />
-                        }}
-                      >
-                        {msg.content}
-                      </ReactMarkdown>
-                      {isGenerating && idx === messages.length - 1 && (
-                        <motion.span animate={{ opacity: [1, 0] }} transition={{ repeat: Infinity, duration: 0.8 }} className="inline-block w-2.5 h-4 bg-brand-primary ml-1 align-middle" />
+                      {msg.content ? (
+                        <>
+                          <ReactMarkdown
+                            components={{
+                              h1: ({node, ...props}) => <h1 className="text-2xl sm:text-3xl font-bold mt-6 mb-4" {...props} />,
+                              h2: ({node, ...props}) => <h2 className="text-xl sm:text-2xl font-bold mt-6 mb-4" {...props} />,
+                              h3: ({node, ...props}) => <h3 className="text-lg sm:text-xl font-bold mt-4 mb-2" {...props} />,
+                              p: ({node, ...props}) => <p className="mb-4 leading-relaxed" {...props} />,
+                              ul: ({node, ...props}) => <ul className="list-disc pl-6 mb-4 space-y-2" {...props} />,
+                              ol: ({node, ...props}) => <ol className="list-decimal pl-6 mb-4 space-y-2" {...props} />,
+                              li: ({node, ...props}) => <li className="" {...props} />,
+                              strong: ({node, ...props}) => <strong className="font-bold text-gray-900" {...props} />,
+                              blockquote: ({node, ...props}) => <blockquote className="border-l-4 border-brand-primary pl-4 py-1 italic text-gray-600 bg-gray-50 my-4 rounded-r-lg" {...props} />
+                            }}
+                          >
+                            {msg.content}
+                          </ReactMarkdown>
+                          {isGenerating && idx === messages.length - 1 && (
+                            <motion.span animate={{ opacity: [1, 0] }} transition={{ repeat: Infinity, duration: 0.8 }} className="inline-block w-2.5 h-4 bg-brand-primary ml-1 align-middle" />
+                          )}
+                        </>
+                      ) : (
+                        isGenerating && idx === messages.length - 1 && (
+                          <div className="flex items-center gap-1.5 h-6 px-1">
+                            <motion.div className="w-2 h-2 bg-brand-primary/50 rounded-full" animate={{ y: [0, -4, 0] }} transition={{ duration: 0.6, repeat: Infinity, delay: 0 }} />
+                            <motion.div className="w-2 h-2 bg-brand-primary/50 rounded-full" animate={{ y: [0, -4, 0] }} transition={{ duration: 0.6, repeat: Infinity, delay: 0.15 }} />
+                            <motion.div className="w-2 h-2 bg-brand-primary/50 rounded-full" animate={{ y: [0, -4, 0] }} transition={{ duration: 0.6, repeat: Infinity, delay: 0.3 }} />
+                          </div>
+                        )
                       )}
                     </div>
                   )}
