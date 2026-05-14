@@ -48,9 +48,24 @@ function PlaygroundContent() {
         })
         
         setChats(fixedChats)
+
+        // Restore the active chat state
+        const activeId = localStorage.getItem("copyai_active_chat")
+        if (activeId && fixedChats.some((c: Chat) => c.id === activeId)) {
+          setCurrentChatId(activeId)
+        }
       } catch (e) {}
     }
   }, [])
+
+  // Sync active chat ID to local storage
+  useEffect(() => {
+    if (currentChatId) {
+      localStorage.setItem("copyai_active_chat", currentChatId)
+    } else {
+      localStorage.removeItem("copyai_active_chat")
+    }
+  }, [currentChatId])
 
   const hasRunInitialPrompt = useRef(false)
 
