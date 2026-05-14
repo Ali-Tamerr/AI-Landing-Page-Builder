@@ -1,10 +1,22 @@
 "use client"
 
+import { useState } from "react"
 import { motion } from "framer-motion"
 import { Button } from "./Button"
-import { ArrowRight } from "lucide-react"
+import { Send } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 export function Hero() {
+  const router = useRouter()
+  const [input, setInput] = useState("")
+
+  const handleGenerate = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!input.trim()) return
+    
+    router.push(`/playground?prompt=${encodeURIComponent(input)}`)
+  }
+
   return (
     <section className="relative pt-32 pb-20 md:pt-48 md:pb-32 bg-brand-bg overflow-hidden" id="hero">
       {/* Infinite Grid Background */}
@@ -45,17 +57,21 @@ export function Hero() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-3 max-w-md mx-auto"
+            className="w-full max-w-2xl mx-auto"
           >
-            <input 
-              type="email" 
-              placeholder="Your business email" 
-              className="w-full h-12 px-5 rounded-full border border-brand-border bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand-primary"
-            />
-            <Button size="lg" className="w-full sm:w-auto rounded-full gap-2 px-8 h-12">
-              Get Started
-              <ArrowRight className="w-4 h-4" />
-            </Button>
+            <form onSubmit={handleGenerate} className="flex flex-col sm:flex-row gap-3 bg-white p-2 rounded-2xl sm:rounded-full border border-brand-border shadow-lg">
+              <input 
+                type="text" 
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="What do you want to write about?"
+                className="flex-1 bg-transparent px-5 py-3 text-gray-900 placeholder:text-gray-400 focus:outline-none text-base sm:text-lg"
+              />
+              <Button type="submit" size="lg" disabled={!input.trim()} className="gap-2 shrink-0 rounded-xl sm:rounded-full px-8 h-12 sm:h-[52px]">
+                <Send className="w-5 h-5" />
+                Generate
+              </Button>
+            </form>
           </motion.div>
           
         </div>
