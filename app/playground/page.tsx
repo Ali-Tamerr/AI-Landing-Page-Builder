@@ -272,12 +272,12 @@ function PlaygroundContent() {
             <div key={chat.id} className={`group relative rounded-xl transition-colors flex items-center ${currentChatId === chat.id ? "bg-white border border-brand-border shadow-sm text-brand-primary" : "hover:bg-gray-100 text-gray-600 border border-transparent"}`}>
               <button
                 onClick={() => { setCurrentChatId(chat.id); if (window.innerWidth < 768) setSidebarOpen(false); }}
-                className="flex-1 p-3 flex items-center gap-3 text-left overflow-hidden"
+                className="flex-1 py-3 pl-3 pr-10 flex items-center gap-3 text-left overflow-hidden"
               >
                 <MessageSquare className="w-4 h-4 shrink-0" />
                 <span className="truncate text-sm font-medium">{chat.title}</span>
               </button>
-              <button onClick={(e) => deleteChat(e, chat.id)} className="p-2 opacity-0 group-hover:opacity-100 hover:text-red-500 transition-opacity absolute right-1 bg-gradient-to-l from-white via-white to-transparent md:from-transparent md:via-transparent">
+              <button onClick={(e) => deleteChat(e, chat.id)} className="p-2 opacity-0 group-hover:opacity-100 hover:text-red-500 transition-opacity absolute right-1 text-gray-400">
                 <Trash2 className="w-4 h-4" />
               </button>
             </div>
