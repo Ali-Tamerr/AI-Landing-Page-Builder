@@ -1,8 +1,49 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
-import { Sparkles } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Sparkles, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { auth } from "@/lib/firebase";
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 
 export default function RegisterPage() {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
+  });
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    try {
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        formData.email,
+        formData.password
+      );
+      
+      // Update the user's display name
+      await updateProfile(userCredential.user, {
+        displayName: formData.name,
+      });
+
+      router.push("/playground");
+    } catch (err: any) {
+      console.error("Registration error:", err);
+      setError(err.message || "Failed to create account. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-brand-bg p-4 relative overflow-hidden">
       <div 
@@ -27,11 +68,20 @@ export default function RegisterPage() {
           <p className="text-slate-400 text-center">Start your 14-day free trial. No credit card required.</p>
         </div>
 
-        <form className="space-y-5">
+        {error && (
+          <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm text-center">
+            {error}
+          </div>
+        )}
+
+        <form className="space-y-5" onSubmit={handleRegister}>
           <div>
             <label className="block text-sm font-medium text-slate-300 mb-1.5 ml-1">Name</label>
             <input 
               type="text" 
+              required
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-white focus:outline-none focus:ring-2 focus:ring-brand-primary focus:bg-white/10 transition-all"
             />
           </div>
@@ -39,6 +89,9 @@ export default function RegisterPage() {
             <label className="block text-sm font-medium text-slate-300 mb-1.5 ml-1">Email</label>
             <input 
               type="email" 
+              required
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-white focus:outline-none focus:ring-2 focus:ring-brand-primary focus:bg-white/10 transition-all"
             />
           </div>
@@ -46,12 +99,27 @@ export default function RegisterPage() {
             <label className="block text-sm font-medium text-slate-300 mb-1.5 ml-1">Password</label>
             <input 
               type="password" 
+              required
+              value={formData.password}
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
               className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-white focus:outline-none focus:ring-2 focus:ring-brand-primary focus:bg-white/10 transition-all"
             />
           </div>
           
-          <Button type="button" size="lg" className="w-full mt-6 h-14 rounded-xl text-lg font-bold shadow-lg shadow-brand-primary/20">
-            Sign up
+          <Button 
+            type="submit" 
+            size="lg" 
+            disabled={loading}
+            className="w-full mt-6 h-14 rounded-xl text-lg font-bold shadow-lg shadow-brand-primary/20 flex items-center justify-center gap-2"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                Creating account...
+              </>
+            ) : (
+              "Sign up"
+            )}
           </Button>
         </form>
 

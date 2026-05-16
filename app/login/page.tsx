@@ -1,8 +1,38 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
-import { Sparkles } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Sparkles, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { auth } from "@/lib/firebase";
+import { signInWithEmailAndPassword } from "firebase/auth";
 
 export default function LoginPage() {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  });
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    try {
+      await signInWithEmailAndPassword(auth, formData.email, formData.password);
+      router.push("/playground");
+    } catch (err: any) {
+      console.error("Login error:", err);
+      setError("Invalid email or password. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-brand-bg p-4 relative overflow-hidden">
       <div 
@@ -27,12 +57,21 @@ export default function LoginPage() {
           <p className="text-slate-400 text-center">Enter your details to log in to your account</p>
         </div>
 
-        <form className="space-y-5">
+        {error && (
+          <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm text-center">
+            {error}
+          </div>
+        )}
+
+        <form className="space-y-5" onSubmit={handleLogin}>
           <div>
             <label className="block text-sm font-medium text-slate-300 mb-1.5 ml-1">Email</label>
             <input 
               type="email" 
+              required
               placeholder="name@company.com"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:bg-white/10 transition-all"
             />
           </div>
@@ -43,13 +82,28 @@ export default function LoginPage() {
             </div>
             <input 
               type="password" 
+              required
               placeholder="••••••••"
+              value={formData.password}
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
               className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:bg-white/10 transition-all"
             />
           </div>
           
-          <Button type="button" size="lg" className="w-full mt-6 h-14 rounded-xl text-lg font-bold shadow-lg shadow-brand-primary/20">
-            Log in
+          <Button 
+            type="submit" 
+            size="lg" 
+            disabled={loading}
+            className="w-full mt-6 h-14 rounded-xl text-lg font-bold shadow-lg shadow-brand-primary/20 flex items-center justify-center gap-2"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                Logging in...
+              </>
+            ) : (
+              "Log in"
+            )}
           </Button>
         </form>
 
