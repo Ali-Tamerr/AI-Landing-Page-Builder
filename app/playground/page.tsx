@@ -241,7 +241,7 @@ function PlaygroundContent() {
   }
 
   return (
-    <div className="min-h-screen bg-brand-bg flex h-[100dvh] overflow-hidden font-sans">
+    <div className="min-h-screen bg-brand-bg flex h-dvh overflow-hidden font-sans">
       {/* Overlay for mobile sidebar */}
       {sidebarOpen && (
         <div 
@@ -371,7 +371,7 @@ function PlaygroundContent() {
         </div>
 
         {/* Input Area */}
-        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-white via-white to-transparent pt-12 pb-6 px-4 pointer-events-none">
+        <div className="absolute bottom-0 left-0 right-0 bg-linear-to-t from-white via-white to-transparent pt-12 pb-6 px-4 pointer-events-none">
           <div className="max-w-4xl mx-auto pointer-events-auto">
             <form onSubmit={handleSend} className="flex gap-2 sm:gap-4 relative bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-gray-100 p-2 sm:p-3">
               <input 

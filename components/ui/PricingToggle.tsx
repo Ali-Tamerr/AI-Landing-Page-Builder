@@ -79,7 +79,7 @@ export function PricingToggle() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: idx * 0.1 }}
-              className={`p-8 relative flex flex-col rounded-[2rem] overflow-hidden ${
+              className={`p-8 relative flex flex-col rounded-4xl overflow-hidden ${
                 plan.isPopular 
                   ? 'bg-brand-primary text-white shadow-xl scale-105 z-10' 
                   : 'bg-brand-bg text-gray-900 border border-brand-border shadow-sm'
