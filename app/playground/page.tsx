@@ -7,6 +7,8 @@ import { ArrowLeft, Sparkles, Send, Loader2, MessageSquare, Plus, Trash2, Menu, 
 import { Button } from "@/components/ui/Button"
 import Link from "next/link"
 import ReactMarkdown from "react-markdown"
+import { auth } from "@/lib/firebase"
+import { onAuthStateChanged, signOut } from "firebase/auth"
 
 type Message = { id: string; role: 'user' | 'model'; content: string }
 type Chat = { id: string; title: string; messages: Message[]; updatedAt: number }
@@ -17,6 +19,19 @@ function PlaygroundContent() {
   const initialPrompt = searchParams.get("prompt") || ""
   
   const [chats, setChats] = useState<Chat[]>([])
+  const [authLoading, setAuthLoading] = useState(true)
+
+  // Client-side Authentication Guard using Firebase Auth
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        router.push("/login")
+      } else {
+        setAuthLoading(false)
+      }
+    })
+    return () => unsubscribe()
+  }, [router])
   const [currentChatId, setCurrentChatId] = useState<string | null>(null)
   const [input, setInput] = useState("")
   const [isGenerating, setIsGenerating] = useState(false)
@@ -24,6 +39,14 @@ function PlaygroundContent() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   
   const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-brand-bg flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-brand-primary" />
+      </div>
+    )
+  }
 
   // Load from local storage on mount
   useEffect(() => {
@@ -287,6 +310,24 @@ function PlaygroundContent() {
               Your recent chats will appear here.
             </div>
           )}
+        </div>
+
+        {/* Sign Out Button in Sidebar Footer */}
+        <div className="p-4 border-t border-brand-border bg-white shrink-0 mt-auto">
+          <Button 
+            onClick={async () => {
+              try {
+                await signOut(auth);
+                router.push("/");
+              } catch (err) {
+                console.error("Sign out error:", err);
+              }
+            }} 
+            variant="outline" 
+            className="w-full justify-center gap-2 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 h-10 rounded-xl text-sm font-medium"
+          >
+            Sign Out
+          </Button>
         </div>
       </div>
 
