@@ -91,33 +91,33 @@ export default function RegisterPage() {
 
         <form className="space-y-5" onSubmit={handleRegister}>
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1.5 ml-1">Name</label>
             <input 
               type="text" 
               required
+              placeholder="Name"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-white focus:outline-none focus:ring-2 focus:ring-brand-primary focus:bg-white/10 transition-all"
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:bg-white/10 transition-all"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1.5 ml-1">Email</label>
             <input 
               type="email" 
               required
+              placeholder="Email"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-white focus:outline-none focus:ring-2 focus:ring-brand-primary focus:bg-white/10 transition-all"
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:bg-white/10 transition-all"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1.5 ml-1">Password</label>
             <input 
               type="password" 
               required
+              placeholder="Password"
               value={formData.password}
               onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-white focus:outline-none focus:ring-2 focus:ring-brand-primary focus:bg-white/10 transition-all"
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:bg-white/10 transition-all"
             />
           </div>
           

@@ -80,25 +80,23 @@ export default function LoginPage() {
 
         <form className="space-y-5" onSubmit={handleLogin}>
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1.5 ml-1">Email</label>
             <input 
               type="email" 
               required
-              placeholder="name@company.com"
+              placeholder="Email"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:bg-white/10 transition-all"
             />
           </div>
           <div>
-            <div className="flex items-center justify-between mb-1.5 ml-1">
-              <label className="block text-sm font-medium text-slate-300">Password</label>
+            <div className="flex items-center justify-end mb-1.5 ml-1">
               <Link href="#" className="text-xs text-brand-primary hover:text-brand-primary/80 transition-colors">Forgot password?</Link>
             </div>
             <input 
               type="password" 
               required
-              placeholder="••••••••"
+              placeholder="Password"
               value={formData.password}
               onChange={(e) => setFormData({ ...formData, password: e.target.value })}
               className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:bg-white/10 transition-all"
