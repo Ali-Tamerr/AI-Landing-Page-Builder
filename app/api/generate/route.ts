@@ -27,8 +27,8 @@ export async function POST(req: Request) {
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    // Use gemini-1.5-flash for super fast and highly accurate structural JSON generation
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    // Use gemini-flash-latest for super fast and highly accurate structural JSON generation
+    const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
 
     const systemInstruction = `You are a world-class marketing campaigns creator, visual art director, and premium landing page engineer.
 You generate highly effective digital campaign assets in structured JSON format.

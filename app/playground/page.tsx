@@ -5,7 +5,8 @@ import { useSearchParams, useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import { 
   ArrowLeft, Sparkles, Send, Loader2, MessageSquare, Plus, Trash2, Menu, X,
-  Copy, Download, Monitor, Tablet, Smartphone, Code, Eye, RefreshCw, Check, CheckCircle2
+  Copy, Download, Monitor, Tablet, Smartphone, Code, Eye, RefreshCw, Check, CheckCircle2,
+  ChevronDown, Info
 } from "lucide-react"
 import { Button } from "@/components/ui/Button"
 import Link from "next/link"
