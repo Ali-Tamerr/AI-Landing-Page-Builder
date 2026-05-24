@@ -38,7 +38,7 @@ export function Hero() {
             transition={{ duration: 0.5 }}
             className="text-5xl md:text-7xl font-extrabold tracking-tight text-gray-900 mb-6 leading-tight"
           >
-            Write better copy, <br className="hidden md:block" />
+            Launch full campaigns, <br className="hidden md:block" />
             <span className="text-brand-primary">
               faster than ever.
             </span>
@@ -50,7 +50,7 @@ export function Hero() {
             transition={{ duration: 0.5, delay: 0.1 }}
             className="text-lg md:text-xl text-brand-muted max-w-2xl mx-auto mb-10"
           >
-            Generate high-converting ads, emails, and landing pages in seconds with our advanced AI copywriting model.
+            Generate high-converting ads, social posts, marketing images, and landing pages in seconds with our advanced multi-asset AI model.
           </motion.p>
 
           <motion.div
