@@ -46,7 +46,9 @@ Your output must be a single, valid JSON object containing exactly the following
    - Ensure the layout is 100% responsive and visually complete (no mock comment blocks, write actual high-quality copy).
 
 Response Format:
-You MUST respond with pure JSON matching this exact structure. Do not wrap the output in markdown code blocks like \`\`\`json. Return a raw string that can be parsed directly with JSON.parse().`;
+You MUST respond with a single, valid JSON object matching this exact structure. 
+Do not wrap the output in markdown code blocks like \`\`\`json. Return a raw string that can be parsed directly with JSON.parse().
+IMPORTANT: Ensure all newlines, backslashes, double quotes, and control characters inside JSON string values are strictly escaped (e.g. use '\\n' for newlines, '\\"' for quotes) to avoid invalid JSON output.`;
 
     let userPrompt = "";
 
@@ -86,12 +88,37 @@ Make the landing page structure extremely modern, using grids, custom flex layou
     
     // Validate that the output can be parsed as JSON
     try {
-      const parsed = JSON.parse(text);
-      return NextResponse.json(parsed);
-    } catch (e) {
+      let cleanText = text.trim();
+      
+      // Strip markdown code block wrappers if present
+      if (cleanText.startsWith("```")) {
+        cleanText = cleanText.replace(/^```(?:json)?\n?/i, "").replace(/\n?```$/, "").trim();
+      }
+      
+      try {
+        const parsed = JSON.parse(cleanText);
+        return NextResponse.json(parsed);
+      } catch (directError) {
+        // Fallback: Find the first '{' and last '}' to isolate the JSON object
+        const startIdx = cleanText.indexOf("{");
+        const endIdx = cleanText.lastIndexOf("}");
+        
+        if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
+          const isolated = cleanText.substring(startIdx, endIdx + 1);
+          const parsed = JSON.parse(isolated);
+          return NextResponse.json(parsed);
+        } else {
+          throw directError;
+        }
+      }
+    } catch (e: any) {
       console.error("Gemini failed to output valid JSON. Raw text was:", text);
       return NextResponse.json(
-        { error: "AI response failed to parse as valid campaign data. Please try again.", raw: text },
+        { 
+          error: "AI response failed to parse as valid campaign data. Please try again.", 
+          raw: text,
+          details: e.message 
+        },
         { status: 500 }
       );
     }
