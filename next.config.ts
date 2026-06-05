@@ -19,6 +19,18 @@ const nextConfig: NextConfig = {
   
   // Ensure trailing slashes are consistent for static export
   trailingSlash: true,
+
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      // Ignore firebase on the server to prevent EvalErrors in Cloudflare Workers
+      config.resolve.alias['firebase/app'] = false;
+      config.resolve.alias['firebase/auth'] = false;
+      config.resolve.alias['firebase/firestore'] = false;
+    }
+    return config;
+  },
 };
 
 export default nextConfig;
+
+import('@opennextjs/cloudflare').then(m => m.initOpenNextCloudflareForDev());
