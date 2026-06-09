@@ -244,7 +244,7 @@ function PlaygroundContent() {
     
     try {
       // 1. Fetch Structured Text & Page Layout from Gemini
-      const textRes = await fetch("/api/generate", {
+      const textRes = await fetch("/api/generate/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -263,7 +263,7 @@ function PlaygroundContent() {
       const campaignData = await textRes.json()
 
       // 2. Fetch AI Visual Asset from Hybrid Image Engine
-      const imageRes = await fetch("/api/generate-image", {
+      const imageRes = await fetch("/api/generate-image/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ imagePrompt: campaignData.imagePrompt })
@@ -317,7 +317,7 @@ function PlaygroundContent() {
 
     try {
       // 1. Send modification instructions to the refine pipeline
-      const tweakRes = await fetch("/api/generate", {
+      const tweakRes = await fetch("/api/generate/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -343,7 +343,7 @@ function PlaygroundContent() {
 
       // 2. If the prompt description changes, update the image visual too!
       if (assetType === "imagePrompt") {
-        const imageRes = await fetch("/api/generate-image", {
+        const imageRes = await fetch("/api/generate-image/", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ imagePrompt: updatedCampaignData.imagePrompt })

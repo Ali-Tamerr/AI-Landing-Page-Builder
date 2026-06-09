@@ -26,9 +26,6 @@ export async function POST(req: Request) {
       );
     }
 
-    const genAI = new GoogleGenerativeAI(apiKey);
-    // Use gemini-flash-latest for super fast and highly accurate structural JSON generation
-    const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
 
     const systemInstruction = `You are a world-class marketing campaigns creator, visual art director, and premium landing page engineer.
 You generate highly effective digital campaign assets in structured JSON format.
@@ -75,14 +72,44 @@ Target Audience: "${targetAudience}"
 Make the landing page structure extremely modern, using grids, custom flex layouts, nice gradients, beautiful interactive card hovering animations, and high contrast. Let the copy sell the value proposition elegantly.`;
     }
 
-    const response = await model.generateContent({
-      contents: [{ role: "user", parts: [{ text: userPrompt }] }],
-      generationConfig: {
-        responseMimeType: "application/json",
-        temperature: 0.7,
-      },
-      systemInstruction: systemInstruction,
-    });
+    const genAI = new GoogleGenerativeAI(apiKey);
+    
+    // Try multiple models in order of preference (best/newest to fallback older models) to handle 503/429 rate limits
+    const modelsToTry = [
+      "gemini-3.5-flash",
+      "gemini-2.5-flash",
+      "gemini-2.0-flash",
+      "gemini-3.1-flash-lite",
+      "gemini-1.5-flash",
+      "gemini-flash-latest"
+    ];
+    let response;
+    let lastError;
+
+    for (const modelName of modelsToTry) {
+      try {
+        const model = genAI.getGenerativeModel({ model: modelName });
+        response = await model.generateContent({
+          contents: [{ role: "user", parts: [{ text: userPrompt }] }],
+          generationConfig: {
+            responseMimeType: "application/json",
+            temperature: 0.7,
+          },
+          systemInstruction: systemInstruction,
+        });
+        if (response) {
+          console.log(`Successfully generated campaign content using model: ${modelName}`);
+          break;
+        }
+      } catch (err: any) {
+        console.warn(`Model ${modelName} failed, trying next fallback. Error:`, err.message || err);
+        lastError = err;
+      }
+    }
+
+    if (!response) {
+      throw lastError || new Error("All generative models failed to respond.");
+    }
 
     const text = response.response.text();
     
