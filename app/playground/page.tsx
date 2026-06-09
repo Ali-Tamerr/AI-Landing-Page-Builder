@@ -463,11 +463,22 @@ function PlaygroundContent() {
         {/* User profile / Logout */}
         <div className="p-4 border-t border-brand-border bg-white shrink-0">
           <div className="flex items-center gap-3 mb-3 px-1">
-            <div className="w-8 h-8 rounded-full bg-brand-primary/10 flex items-center justify-center text-brand-primary font-bold text-sm">
-              {user?.email?.charAt(0).toUpperCase()}
-            </div>
+            {user?.photoURL ? (
+              <img 
+                src={user.photoURL} 
+                alt={user.displayName || "User Profile"} 
+                referrerPolicy="no-referrer"
+                className="w-8 h-8 rounded-full object-cover shrink-0 border border-brand-border"
+              />
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-brand-primary/10 flex items-center justify-center text-brand-primary font-bold text-sm shrink-0">
+                {(user?.displayName || user?.email || "?").charAt(0).toUpperCase()}
+              </div>
+            )}
             <div className="flex flex-col min-w-0">
-              <span className="text-xs font-semibold text-gray-900 truncate">{user?.email}</span>
+              <span className="text-xs font-semibold text-gray-900 truncate">
+                {user?.displayName || user?.email}
+              </span>
               <span className="text-[10px] text-gray-400">Creator Workspace</span>
             </div>
           </div>
