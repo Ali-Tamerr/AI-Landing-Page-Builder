@@ -77,9 +77,9 @@ Make the landing page structure extremely modern, using grids, custom flex layou
     // Try multiple models in order of preference (best/newest to fallback older models) to handle 503/429 rate limits
     const modelsToTry = [
       "gemini-3.5-flash",
+      "gemini-3.1-flash-lite",
       "gemini-2.5-flash",
       "gemini-2.0-flash",
-      "gemini-3.1-flash-lite",
       "gemini-1.5-flash",
       "gemini-flash-latest"
     ];
