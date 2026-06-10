@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
@@ -103,29 +103,29 @@ Make the landing page structure extremely modern, using grids, custom flex layou
           generationConfig: {
             responseMimeType: "application/json",
             responseSchema: {
-              type: "OBJECT",
+              type: SchemaType.OBJECT,
               properties: {
                 socialCopy: { 
-                  type: "STRING",
+                  type: SchemaType.STRING,
                   description: "Compelling social media post copy."
                 },
                 adCopy: {
-                  type: "OBJECT",
+                  type: SchemaType.OBJECT,
                   properties: {
                     googleSearch: {
-                      type: "OBJECT",
+                      type: SchemaType.OBJECT,
                       properties: {
-                        headline: { type: "STRING" },
-                        description: { type: "STRING" }
+                        headline: { type: SchemaType.STRING },
+                        description: { type: SchemaType.STRING }
                       },
                       required: ["headline", "description"]
                     },
                     facebookFeed: {
-                      type: "OBJECT",
+                      type: SchemaType.OBJECT,
                       properties: {
-                        headline: { type: "STRING" },
-                        description: { type: "STRING" },
-                        cta: { type: "STRING" }
+                        headline: { type: SchemaType.STRING },
+                        description: { type: SchemaType.STRING },
+                        cta: { type: SchemaType.STRING }
                       },
                       required: ["headline", "description", "cta"]
                     }
@@ -133,15 +133,15 @@ Make the landing page structure extremely modern, using grids, custom flex layou
                   required: ["googleSearch", "facebookFeed"]
                 },
                 imagePrompt: { 
-                  type: "STRING",
+                  type: SchemaType.STRING,
                   description: "Visual generation prompt."
                 },
                 imageKeywords: {
-                  type: "STRING",
+                  type: SchemaType.STRING,
                   description: "A single primary keyword or two comma-separated words representing the main subject (e.g., 'barber', 'car', 'lamp') to search for placeholder images."
                 },
                 landingPageHtml: { 
-                  type: "STRING",
+                  type: SchemaType.STRING,
                   description: "Full, self-contained HTML page using Tailwind CSS."
                 }
               },
