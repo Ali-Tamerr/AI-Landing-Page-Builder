@@ -36,11 +36,20 @@ Your output must be a single, valid JSON object containing exactly the following
    - "googleSearch": { "headline": "A short, premium headline (max 30 chars)", "description": "A high-converting description (max 90 chars)" }
    - "facebookFeed": { "headline": "Engaging scroll-stopping headline", "description": "Compelling feed narrative copy", "cta": "Learn More" }
 3. "imagePrompt": A highly descriptive visual prompt for a text-to-image AI model (like FLUX or Stable Diffusion). Describe the style (e.g. "high-end editorial product photography", "sleek studio flatlay"), subject, lighting, modern color theme matching ${colorTheme}, and composition details. Do not use generic buzzwords like "photorealistic".
-4. "landingPageHtml": A self-contained, high-converting, and responsive mini-landing page HTML document. 
+4. "imageKeywords": A single, high-probability search term matching the primary subject of the campaign (e.g., 'barber', 'car', 'lamp', 'laptop') to ensure accurate placeholder image fetching.
+5. "landingPageHtml": A self-contained, high-converting, and comprehensive landing page HTML document. 
    - It MUST include a \`<script src="https://cdn.tailwindcss.com"></script>\` tag and a modern premium Google Font (like Plus Jakarta Sans or Inter) in the \`<head>\` for gorgeous layout styling.
-   - It MUST use standard Tailwind class utilities for styling, ensuring a clean background, vibrant accent buttons, a beautiful sticky header with a custom brand logo placeholder, a Hero section with CTA forms, a responsive Features grid, testimonial cards, and a clean footer.
-   - Match the color scheme of "${colorTheme}" (e.g. if emerald, use emerald and teal accents; if indigo, use indigo gradients; if dark mode, use slate-900 background with glowing border cards).
-   - Ensure the layout is 100% responsive and visually complete (no mock comment blocks, write actual high-quality copy).
+   - The document MUST be a complete, long-form website with at least 6 distinct sections:
+     1. A sleek Sticky Header with logo and navigation links.
+     2. A high-impact Hero section with a strong headline, product/service copy, floating interactive badges, and an email signup / appointment booking form.
+     3. A detailed Services & Features Grid (with descriptive icons and subtle hovering card effects).
+     4. A clean Pricing or Packages comparison grid (detailing different tiers or options).
+     5. A Testimonials section with customer review cards.
+     6. An FAQ section with pre-filled question and answer boxes (styled as clean interactive accordions).
+     7. A high-contrast bottom conversion CTA row.
+     8. A detailed, multi-column Footer with copyright, brand description, and links.
+   - Match the color scheme of "${colorTheme}" (e.g. if emerald, use emerald and teal gradients; if indigo, use indigo gradients; if dark mode, use slate-900 background with glowing border cards).
+   - Ensure the layout is 100% responsive, uses semantic tags, and has complete, high-quality copywriting (never use empty layout placeholders).
 
 Response Format:
 You MUST respond with a single, valid JSON object matching this exact structure. 
@@ -61,7 +70,7 @@ Please update the specified asset ("${tweakAsset}") in the campaign based on the
 IMPORTANT: 
 - Keep all other assets (e.g. other copy blocks or HTML layout) exactly the same as in the Previous Campaign State, unless they must change to maintain design consistency with the tweaked asset.
 - If editing the landingPageHtml, ensure it remains a valid, full HTML document with the Tailwind script and matching styling.
-- Return the full updated campaign JSON object containing all 4 keys ("socialCopy", "adCopy", "imagePrompt", "landingPageHtml").`;
+- Return the full updated campaign JSON object containing all keys.`;
     } else {
       userPrompt = `Create an entire, high-converting multi-asset marketing campaign for the following:
 Product/Service Description: "${prompt}"
@@ -127,12 +136,16 @@ Make the landing page structure extremely modern, using grids, custom flex layou
                   type: "STRING",
                   description: "Visual generation prompt."
                 },
+                imageKeywords: {
+                  type: "STRING",
+                  description: "A single primary keyword or two comma-separated words representing the main subject (e.g., 'barber', 'car', 'lamp') to search for placeholder images."
+                },
                 landingPageHtml: { 
                   type: "STRING",
                   description: "Full, self-contained HTML page using Tailwind CSS."
                 }
               },
-              required: ["socialCopy", "adCopy", "imagePrompt", "landingPageHtml"]
+              required: ["socialCopy", "adCopy", "imagePrompt", "imageKeywords", "landingPageHtml"]
             },
             temperature: 0.7,
           },

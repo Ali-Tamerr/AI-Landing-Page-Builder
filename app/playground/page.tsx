@@ -29,6 +29,7 @@ interface Campaign {
   socialCopy: string;
   adCopy: AdCopy;
   imagePrompt: string;
+  imageKeywords?: string;
   imageUrl: string;
   landingPageHtml: string;
   createdAt: number;
@@ -266,7 +267,10 @@ function PlaygroundContent() {
       const imageRes = await fetch("/api/generate-image/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imagePrompt: campaignData.imagePrompt })
+        body: JSON.stringify({ 
+          imagePrompt: campaignData.imagePrompt,
+          imageKeywords: campaignData.imageKeywords
+        })
       })
 
       if (!imageRes.ok) {
@@ -287,6 +291,7 @@ function PlaygroundContent() {
         socialCopy: campaignData.socialCopy,
         adCopy: campaignData.adCopy,
         imagePrompt: campaignData.imagePrompt,
+        imageKeywords: campaignData.imageKeywords,
         imageUrl: imageData.url,
         landingPageHtml: campaignData.landingPageHtml,
         createdAt: Date.now()
@@ -346,7 +351,10 @@ function PlaygroundContent() {
         const imageRes = await fetch("/api/generate-image/", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ imagePrompt: updatedCampaignData.imagePrompt })
+          body: JSON.stringify({ 
+            imagePrompt: updatedCampaignData.imagePrompt,
+            imageKeywords: updatedCampaignData.imageKeywords || activeCampaign.imageKeywords
+          })
         })
         if (imageRes.ok) {
           const img = await imageRes.json()
@@ -360,6 +368,7 @@ function PlaygroundContent() {
         socialCopy: updatedCampaignData.socialCopy,
         adCopy: updatedCampaignData.adCopy,
         imagePrompt: updatedCampaignData.imagePrompt,
+        imageKeywords: updatedCampaignData.imageKeywords || activeCampaign.imageKeywords,
         landingPageHtml: updatedCampaignData.landingPageHtml,
         imageUrl: finalImageUrl
       }
