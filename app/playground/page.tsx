@@ -45,6 +45,58 @@ const COLOR_THEMES = [
   { name: "Dark Theme", value: "Dark Theme", bgClass: "bg-slate-900" }
 ];
 
+const THEME_DESIGN_STYLES: { [key: string]: { text: string; bg: string; border: string; btn: string; badge: string; shadow: string } } = {
+  "Indigo": {
+    text: "text-indigo-600",
+    bg: "from-indigo-600 to-indigo-950",
+    border: "border-indigo-100",
+    btn: "bg-indigo-600 hover:bg-indigo-700 text-white",
+    badge: "bg-indigo-50 text-indigo-700 border-indigo-200",
+    shadow: "shadow-indigo-100/40"
+  },
+  "Emerald": {
+    text: "text-emerald-600",
+    bg: "from-emerald-600 to-emerald-950",
+    border: "border-emerald-100",
+    btn: "bg-emerald-600 hover:bg-emerald-700 text-white",
+    badge: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    shadow: "shadow-emerald-100/40"
+  },
+  "Violet": {
+    text: "text-violet-600",
+    bg: "from-violet-600 to-violet-950",
+    border: "border-violet-100",
+    btn: "bg-violet-600 hover:bg-violet-700 text-white",
+    badge: "bg-violet-50 text-violet-700 border-violet-200",
+    shadow: "shadow-violet-100/40"
+  },
+  "Rose": {
+    text: "text-rose-600",
+    bg: "from-rose-600 to-rose-950",
+    border: "border-rose-100",
+    btn: "bg-rose-600 hover:bg-rose-700 text-white",
+    badge: "bg-rose-50 text-rose-700 border-rose-200",
+    shadow: "shadow-rose-100/40"
+  },
+  "Amber": {
+    text: "text-amber-600",
+    bg: "from-amber-500 to-amber-950",
+    border: "border-amber-100",
+    btn: "bg-amber-500 hover:bg-amber-600 text-white",
+    badge: "bg-amber-50 text-amber-800 border-amber-200",
+    shadow: "shadow-amber-100/40"
+  },
+  "Dark Theme": {
+    text: "text-slate-200",
+    bg: "from-slate-800 to-slate-950",
+    border: "border-slate-800",
+    btn: "bg-slate-900 hover:bg-black text-white border border-slate-700",
+    badge: "bg-slate-800 text-slate-200 border-slate-700",
+    shadow: "shadow-slate-900/50"
+  }
+};
+
+
 function PlaygroundContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -76,6 +128,8 @@ function PlaygroundContent() {
   const [activeLandingTab, setActiveLandingTab] = useState<"preview" | "code">("preview")
   const [iframeWidth, setIframeWidth] = useState<"100%" | "768px" | "375px">("100%")
   const [adPreviewPlatform, setAdPreviewPlatform] = useState<"google" | "facebook">("google")
+  const [graphicViewMode, setGraphicViewMode] = useState<"designer" | "photo">("designer")
+
 
   // Tweak inputs
   const [tweaks, setTweaks] = useState({
@@ -1008,13 +1062,37 @@ function PlaygroundContent() {
                       </div>
                       
                       <div className="flex items-center gap-2">
+                        {/* Designer vs Raw Photo Toggle */}
+                        <div className="flex border border-brand-border rounded-xl p-0.5 bg-gray-50 mr-2 shrink-0">
+                          <button
+                            onClick={() => setGraphicViewMode("designer")}
+                            className={`px-3 py-1.5 text-[10px] font-bold rounded-lg transition-all ${
+                              graphicViewMode === "designer" 
+                                ? "bg-white text-gray-900 shadow-3xs" 
+                                : "text-gray-500 hover:text-gray-900"
+                            }`}
+                          >
+                            Designer Graphic
+                          </button>
+                          <button
+                            onClick={() => setGraphicViewMode("photo")}
+                            className={`px-3 py-1.5 text-[10px] font-bold rounded-lg transition-all ${
+                              graphicViewMode === "photo" 
+                                ? "bg-white text-gray-900 shadow-3xs" 
+                                : "text-gray-500 hover:text-gray-900"
+                            }`}
+                          >
+                            Raw Photo
+                          </button>
+                        </div>
+
                         {/* Download Photo Button */}
                         <a 
                           href={activeCampaign.imageUrl} 
                           target="_blank" 
                           rel="noreferrer"
                           download="campaign_graphic.jpg"
-                          className="rounded-lg h-9 px-3 border border-brand-border hover:bg-gray-50 flex items-center justify-center gap-1.5 text-xs font-semibold text-gray-600 bg-white transition-all"
+                          className="rounded-lg h-9 px-3 border border-brand-border hover:bg-gray-50 flex items-center justify-center gap-1.5 text-xs font-semibold text-gray-600 bg-white transition-all shrink-0"
                         >
                           <Download className="w-3.5 h-3.5" />
                           Download
@@ -1024,24 +1102,99 @@ function PlaygroundContent() {
 
                     {/* Image visual canvas area */}
                     <div className="flex-1 p-6 flex flex-col bg-gray-50 items-center justify-center overflow-hidden">
-                      <div className="w-full max-w-[420px] bg-white border border-gray-150 rounded-2xl overflow-hidden shadow-sm flex flex-col h-full max-h-[360px] relative group">
-                        
-                        {/* The generated visual rendering */}
-                        <div className="flex-1 w-full h-full relative overflow-hidden bg-gray-100 flex items-center justify-center">
-                          <img 
-                            src={activeCampaign.imageUrl} 
-                            alt="Campaign generated layout visual"
-                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-102"
-                            loading="eager"
-                          />
-                        </div>
+                      {graphicViewMode === "photo" ? (
+                        <div className="w-full max-w-[420px] bg-white border border-gray-150 rounded-2xl overflow-hidden shadow-sm flex flex-col h-full max-h-[360px] relative group">
+                          
+                          {/* The generated visual rendering */}
+                          <div className="flex-1 w-full h-full relative overflow-hidden bg-gray-100 flex items-center justify-center">
+                            <img 
+                              src={activeCampaign.imageUrl} 
+                              alt="Campaign generated layout visual"
+                              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-102"
+                              loading="eager"
+                            />
+                          </div>
 
-                        {/* Visual overlay description descriptor info */}
-                        <div className="bg-white border-t border-gray-100 p-3 select-text">
-                          <div className="text-[9px] font-bold text-violet-600 uppercase tracking-wide">Image Design Descriptor Prompt</div>
-                          <p className="text-[10px] text-gray-500 truncate mt-0.5 italic">"{activeCampaign.imagePrompt}"</p>
+                          {/* Visual overlay description descriptor info */}
+                          <div className="bg-white border-t border-gray-100 p-3 select-text">
+                            <div className="text-[9px] font-bold text-violet-600 uppercase tracking-wide">Image Design Descriptor Prompt</div>
+                            <p className="text-[10px] text-gray-500 truncate mt-0.5 italic">"{activeCampaign.imagePrompt}"</p>
+                          </div>
                         </div>
-                      </div>
+                      ) : (
+                        // Premium Designer Graphic Post Layout
+                        <div className={`w-full max-w-[380px] bg-white border border-gray-150 rounded-2xl overflow-hidden shadow-md flex flex-col h-full max-h-[385px] relative group ${
+                          THEME_DESIGN_STYLES[activeCampaign.colorTheme]?.border || "border-indigo-100"
+                        } ${THEME_DESIGN_STYLES[activeCampaign.colorTheme]?.shadow || "shadow-indigo-100/40"}`}>
+                          
+                          {/* Top Designer Header Band */}
+                          <div className="px-4 py-3 border-b border-gray-50 flex items-center justify-between bg-white shrink-0">
+                            <div className="flex items-center gap-2">
+                              <span className={`w-6 h-6 rounded-full bg-linear-to-tr ${
+                                THEME_DESIGN_STYLES[activeCampaign.colorTheme]?.bg || "from-indigo-600 to-indigo-950"
+                              } flex items-center justify-center text-[10px] font-black text-white`}>
+                                {activeCampaign.title.charAt(0).toUpperCase()}
+                              </span>
+                              <div className="flex flex-col">
+                                <span className="text-[11px] font-extrabold text-gray-900 tracking-tight leading-none">
+                                  {activeCampaign.title.split(" ")[0]}
+                                </span>
+                                <span className="text-[8px] text-gray-400 font-medium mt-0.5 leading-none">
+                                  {activeCampaign.tone} Campaign
+                                </span>
+                              </div>
+                            </div>
+                            <span className={`text-[8px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${
+                              THEME_DESIGN_STYLES[activeCampaign.colorTheme]?.badge || "bg-indigo-50 text-indigo-700 border-indigo-200"
+                            }`}>
+                              Featured
+                            </span>
+                          </div>
+
+                          {/* Styled graphic canvas area with image background */}
+                          <div className="flex-1 w-full relative overflow-hidden bg-gray-950 flex items-center justify-center">
+                            <img 
+                              src={activeCampaign.imageUrl} 
+                              alt="Campaign designer graphic visual"
+                              className="w-full h-full object-cover opacity-90 transition-transform duration-500 group-hover:scale-105"
+                            />
+                            
+                            {/* Gradient overlays to darken top and bottom for text readability */}
+                            <div className="absolute inset-0 bg-linear-to-b from-black/20 via-transparent to-black/80" />
+
+                            {/* Floating Promotion Badge */}
+                            <div className={`absolute top-3 right-3 px-2.5 py-1 rounded-lg text-[9px] font-black tracking-widest text-white shadow-md uppercase bg-linear-to-r ${
+                              THEME_DESIGN_STYLES[activeCampaign.colorTheme]?.bg || "from-indigo-600 to-indigo-950"
+                            }`}>
+                              {activeCampaign.tone === "Luxury" ? "Exclusive" : activeCampaign.tone === "Bold" ? "Special Deal" : "Limited Offer"}
+                            </div>
+
+                            {/* Center Logo branding watermark */}
+                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-15">
+                              <span className="text-white text-5xl font-black tracking-widest select-none uppercase">
+                                {activeCampaign.title.split(" ")[0].substring(0, 3)}
+                              </span>
+                            </div>
+
+                            {/* Bottom Marketing Headline & CTA button overlaid directly on the designer graphic */}
+                            <div className="absolute inset-x-0 bottom-0 p-4.5 space-y-2.5 text-left">
+                              <h3 className="text-white text-xs font-extrabold leading-snug tracking-tight drop-shadow-sm select-text line-clamp-2">
+                                {activeCampaign.adCopy.googleSearch.headline}
+                              </h3>
+                              <div className="flex items-center justify-between gap-3">
+                                <span className="text-[9px] text-white/80 font-medium tracking-wide truncate flex-1">
+                                  {activeCampaign.adCopy.googleSearch.description.substring(0, 42)}...
+                                </span>
+                                <button className={`px-3 py-1.5 rounded-lg text-[9px] font-extrabold tracking-wide uppercase shrink-0 transition-colors shadow-sm ${
+                                  THEME_DESIGN_STYLES[activeCampaign.colorTheme]?.btn || "bg-indigo-600 hover:bg-indigo-700 text-white"
+                                }`}>
+                                  {activeCampaign.adCopy.facebookFeed.cta || "Learn More"}
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     {/* Inline Tweak Input Footer */}
@@ -1222,7 +1375,7 @@ function PlaygroundContent() {
                           srcDoc={activeCampaign.landingPageHtml} 
                           title="Landing page preview sandbox"
                           className="flex-1 w-full border-none bg-white select-none"
-                          sandbox="allow-scripts"
+                          sandbox="allow-scripts allow-same-origin"
                         />
                       </div>
                     ) : (
