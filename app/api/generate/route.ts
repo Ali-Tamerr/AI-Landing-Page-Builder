@@ -1,5 +1,7 @@
 import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
 import { NextResponse } from "next/server";
+import fs from "fs";
+import path from "path";
 
 export async function POST(req: Request) {
   try {
@@ -13,6 +15,15 @@ export async function POST(req: Request) {
       tweakInstruction,
       previousCampaignState 
     } = body;
+
+    // Load social media design skill for image generation
+    let socialMediaDesignSkill = "";
+    try {
+      const skillPath = path.join(process.cwd(), "skills", "social-media-design.md");
+      socialMediaDesignSkill = fs.readFileSync(skillPath, "utf-8");
+    } catch (e) {
+      console.warn("Could not load social media design skill", e);
+    }
 
     if (!prompt && !tweakInstruction) {
       return NextResponse.json({ error: "Product description or tweak instructions are required" }, { status: 400 });
@@ -54,7 +65,14 @@ Your output must be a single, valid JSON object containing exactly the following
 Response Format:
 You MUST respond with a single, valid JSON object matching this exact structure. 
 Do not wrap the output in markdown code blocks like \`\`\`json. Return a raw string that can be parsed directly with JSON.parse().
-IMPORTANT: Ensure all newlines, backslashes, double quotes, and control characters inside JSON string values are strictly escaped (e.g. use '\\n' for newlines, '\\"' for quotes) to avoid invalid JSON output.`;
+IMPORTANT: Ensure all newlines, backslashes, double quotes, and control characters inside JSON string values are strictly escaped (e.g. use '\\n' for newlines, '\\"' for quotes) to avoid invalid JSON output.
+
+--- IMAGE PROMPT GUIDELINES ---
+When generating the "imagePrompt", you MUST apply the stylistic theories from the following design guidelines, but DO NOT output the guidelines themselves.
+Keep the "imagePrompt" concise and extremely descriptive (maximum 500 characters).
+${socialMediaDesignSkill}
+-------------------------------
+`;
 
     let userPrompt = "";
 

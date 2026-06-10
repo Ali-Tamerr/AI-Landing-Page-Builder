@@ -8,16 +8,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Image prompt is required" }, { status: 400 });
     }
 
-    // Since the Unsplash NAPI is blocked/unauthorized, we will use image.pollinations.ai
-    // which generates highly specific custom images directly from our prompt and works seamlessly
-    // without requiring keys.
-    const randomSeed = Math.floor(Math.random() * 1000000);
-    const enhancement = "high quality professional social media post design, clean modern aesthetic";
-    
-    // We construct a descriptive prompt combining the generated prompt and visual design keywords
-    const fullPrompt = `${imagePrompt}, ${enhancement}`;
-    
-    const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(fullPrompt)}?seed=${randomSeed}&width=800&height=600&nologo=true`;
+    // Since Pollinations API now strictly returns 402 Payment Required for new prompts,
+    // we use a reliable free image service (LoremFlickr) heavily optimized with aesthetic tags 
+    // to prevent random unrelated images (like "boy" or "cat").
+    const cleanKeywords = (imageKeywords || "design").replace(/\s+/g, ',');
+    const randomSeed = Math.floor(Math.random() * 10000);
+    const imageUrl = `https://loremflickr.com/800/600/${cleanKeywords},aesthetic,professional/all?lock=${randomSeed}`;
 
     return NextResponse.json({ 
       url: imageUrl, 
