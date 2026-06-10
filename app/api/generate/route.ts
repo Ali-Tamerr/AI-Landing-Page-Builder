@@ -93,6 +93,47 @@ Make the landing page structure extremely modern, using grids, custom flex layou
           contents: [{ role: "user", parts: [{ text: userPrompt }] }],
           generationConfig: {
             responseMimeType: "application/json",
+            responseSchema: {
+              type: "OBJECT",
+              properties: {
+                socialCopy: { 
+                  type: "STRING",
+                  description: "Compelling social media post copy."
+                },
+                adCopy: {
+                  type: "OBJECT",
+                  properties: {
+                    googleSearch: {
+                      type: "OBJECT",
+                      properties: {
+                        headline: { type: "STRING" },
+                        description: { type: "STRING" }
+                      },
+                      required: ["headline", "description"]
+                    },
+                    facebookFeed: {
+                      type: "OBJECT",
+                      properties: {
+                        headline: { type: "STRING" },
+                        description: { type: "STRING" },
+                        cta: { type: "STRING" }
+                      },
+                      required: ["headline", "description", "cta"]
+                    }
+                  },
+                  required: ["googleSearch", "facebookFeed"]
+                },
+                imagePrompt: { 
+                  type: "STRING",
+                  description: "Visual generation prompt."
+                },
+                landingPageHtml: { 
+                  type: "STRING",
+                  description: "Full, self-contained HTML page using Tailwind CSS."
+                }
+              },
+              required: ["socialCopy", "adCopy", "imagePrompt", "landingPageHtml"]
+            },
             temperature: 0.7,
           },
           systemInstruction: systemInstruction,
