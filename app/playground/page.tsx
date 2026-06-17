@@ -107,44 +107,6 @@ function parseStreamingMarkdown(text: string) {
   };
 }
 
-function getLoadingHtml(theme: string) {
-  return `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <style>
-    body { font-family: 'Plus Jakarta Sans', sans-serif; }
-  </style>
-</head>
-<body class="bg-slate-950 text-white min-h-screen flex items-center justify-center overflow-hidden p-6">
-  <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(99,102,241,0.1),transparent_50%),radial-gradient(circle_at_bottom_left,rgba(168,85,247,0.05),transparent_50%)]"></div>
-  <div class="relative max-w-md w-full text-center space-y-6">
-    <div class="relative w-16 h-16 mx-auto">
-      <div class="absolute inset-0 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 animate-ping"></div>
-      <div class="absolute inset-0 rounded-2xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-500/30">
-        <svg class="w-8 h-8 text-white animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-        </svg>
-      </div>
-    </div>
-    <div class="space-y-2">
-      <h2 class="text-xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-indigo-200 to-purple-200">PomelliAI is compiling your site</h2>
-      <p class="text-xs text-slate-400 max-w-sm mx-auto leading-relaxed">Designing code structure, content blocks, Tailwind variables, and layout sections...</p>
-    </div>
-    <div class="inline-flex items-center gap-2 bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-full">
-      <svg class="animate-spin h-3.5 w-3.5 text-indigo-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-      </svg>
-      <span class="text-[10px] font-bold text-slate-300 uppercase tracking-wide">Streaming live update</span>
-    </div>
-  </div>
-</body>
-</html>`;
-}
 
 function PlaygroundContent() {
   const searchParams = useSearchParams()
@@ -382,9 +344,6 @@ function PlaygroundContent() {
     const tempProjectId = activeProject?.id || `proj-${Date.now()}`
     const isNewProject = !activeProject
 
-    const loadingHtml = getLoadingHtml(colorTheme);
-    const initialHtml = previousHtmlString || loadingHtml;
-
     if (isNewProject) {
       const newProject: WebProject = {
         id: tempProjectId,
@@ -393,7 +352,7 @@ function PlaygroundContent() {
         tone,
         colorTheme,
         targetAudience,
-        landingPageHtml: initialHtml,
+        landingPageHtml: "",
         messages: [...updatedMessages, initialAiMsg],
         createdAt: Date.now()
       }
@@ -404,8 +363,7 @@ function PlaygroundContent() {
         if (p.id === tempProjectId) {
           return {
             ...p,
-            messages: [...updatedMessages, initialAiMsg],
-            landingPageHtml: p.landingPageHtml || loadingHtml
+            messages: [...updatedMessages, initialAiMsg]
           }
         }
         return p
@@ -444,7 +402,8 @@ function PlaygroundContent() {
       const decoder = new TextDecoder()
       let accumulatedText = ""
       let currentThinking = ""
-      let currentHtml = initialHtml
+      let currentHtml = previousHtmlString
+      let hasAutoMinimized = false
 
       while (true) {
         const { done, value } = await reader.read()
@@ -457,6 +416,11 @@ function PlaygroundContent() {
         currentThinking = parsed.thinking
         if (parsed.html) {
           currentHtml = parsed.html
+          // Auto-minimize the loader overlay so the user sees live HTML rendering
+          if (!hasAutoMinimized) {
+            hasAutoMinimized = true
+            setLoaderMinimized(true)
+          }
         }
 
         const streamingAiMsg: ChatMessage = {
