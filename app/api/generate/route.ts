@@ -1,7 +1,5 @@
 import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
 import { NextResponse } from "next/server";
-import fs from "fs";
-import path from "path";
 
 export async function POST(req: Request) {
   try {
@@ -11,22 +9,11 @@ export async function POST(req: Request) {
       tone = "Professional", 
       colorTheme = "Indigo", 
       targetAudience = "General Audience",
-      tweakAsset,
-      tweakInstruction,
-      previousCampaignState 
+      previousHtml 
     } = body;
 
-    // Load social media design skill for image generation
-    let socialMediaDesignSkill = "";
-    try {
-      const skillPath = path.join(process.cwd(), "skills", "social-media-design.md");
-      socialMediaDesignSkill = fs.readFileSync(skillPath, "utf-8");
-    } catch (e) {
-      console.warn("Could not load social media design skill", e);
-    }
-
-    if (!prompt && !tweakInstruction) {
-      return NextResponse.json({ error: "Product description or tweak instructions are required" }, { status: 400 });
+    if (!prompt) {
+      return NextResponse.json({ error: "Prompt is required" }, { status: 400 });
     }
 
     const apiKey = process.env.COPYAI_GEMINI_API_KEY;
@@ -37,60 +24,52 @@ export async function POST(req: Request) {
       );
     }
 
+    const systemInstruction = `You are a world-class frontend engineer and UI/UX expert.
+You build premium, beautiful, modern, high-converting landing pages.
+You always generate valid, structured JSON containing exactly two keys:
+1. "thinking": A short, friendly message (approx 50-100 words) written to the user explaining what design choices you made, what sections you created/modified, and how it aligns with their request.
+2. "landingPageHtml": A self-contained, gorgeous, responsive HTML document.
 
-    const systemInstruction = `You are a world-class marketing campaigns creator, visual art director, and premium landing page engineer.
-You generate highly effective digital campaign assets in structured JSON format.
-
-Your output must be a single, valid JSON object containing exactly the following keys:
-1. "socialCopy": A compelling social media post copy (approx 100-200 words) tailored to the brand's tone. Include relevant visual descriptions, engaging emojis, and target hashtags.
-2. "adCopy": An ad campaign suite containing search and social feeds copy:
-   - "googleSearch": { "headline": "A short, premium headline (max 30 chars)", "description": "A high-converting description (max 90 chars)" }
-   - "facebookFeed": { "headline": "Engaging scroll-stopping headline", "description": "Compelling feed narrative copy", "cta": "Learn More" }
-3. "imagePrompt": A highly descriptive visual prompt for a text-to-image AI model (like FLUX or Stable Diffusion). Describe the style (e.g. "high-end editorial product photography", "sleek studio flatlay"), subject, lighting, modern color theme matching ${colorTheme}, and composition details. Do not use generic buzzwords like "photorealistic".
-4. "imageKeywords": A single, high-probability search term matching the primary subject of the campaign (e.g., 'barber', 'car', 'lamp', 'laptop') to ensure accurate placeholder image fetching.
-5. "landingPageHtml": A self-contained, high-converting, and comprehensive landing page HTML document. 
-   - It MUST include a \`<script src="https://cdn.tailwindcss.com"></script>\` tag and a modern premium Google Font (like Plus Jakarta Sans or Inter) in the \`<head>\` for gorgeous layout styling.
-   - The document MUST be a complete, long-form website with at least 6 distinct sections:
-     1. A sleek Sticky Header with logo and navigation links.
-     2. A high-impact Hero section with a strong headline, product/service copy, floating interactive badges, and an email signup / appointment booking form.
-     3. A detailed Services & Features Grid (with descriptive icons and subtle hovering card effects).
-     4. A clean Pricing or Packages comparison grid (detailing different tiers or options).
-     5. A Testimonials section with customer review cards.
-     6. An FAQ section with pre-filled question and answer boxes (styled as clean interactive accordions).
-     7. A high-contrast bottom conversion CTA row.
-     8. A detailed, multi-column Footer with copyright, brand description, and links.
-   - Match the color scheme of "${colorTheme}" (e.g. if emerald, use emerald and teal gradients; if indigo, use indigo gradients; if dark mode, use slate-900 background with glowing border cards).
-   - Ensure the layout is 100% responsive, uses semantic tags, and has complete, high-quality copywriting (never use empty layout placeholders).
+Landing Page HTML Guidelines:
+- It MUST include a \`<script src="https://cdn.tailwindcss.com"></script>\` tag and a modern premium Google Font (like Plus Jakarta Sans, Outfit, or Inter) in the \`<head>\` for gorgeous layout styling.
+- The document MUST be a complete, long-form website with distinct components:
+  1. A sleek Sticky Header with logo and navigation links.
+  2. A high-impact Hero section with a strong headline, product/service copy, floating interactive elements, and an email signup or call-to-action form.
+  3. A detailed Services & Features Grid (with descriptive SVG icons and subtle hovering card animations).
+  4. A clean Pricing/Packages comparison grid (detailing different tiers or options).
+  5. A Testimonials section with customer review cards.
+  6. An FAQ section with pre-filled Q&A cards (styled as clean interactive elements).
+  7. A high-contrast bottom conversion CTA row.
+  8. A detailed, multi-column Footer with copyright, brand description, and links.
+- Make the design feel premium, using HSL colors, smooth gradients, subtle micro-interactions, custom scrollbars, and modern shadows.
+- Match the color scheme of "${colorTheme}" (e.g., if Indigo, Violet, Emerald, Rose, Amber, or Dark Theme).
+- Use Tailwind CSS colors and classes for everything.
+- Ensure the layout is 100% responsive, uses semantic tags, and has complete, high-quality copywriting (never use empty layout placeholders or lorem ipsum).
 
 Response Format:
 You MUST respond with a single, valid JSON object matching this exact structure. 
 Do not wrap the output in markdown code blocks like \`\`\`json. Return a raw string that can be parsed directly with JSON.parse().
-IMPORTANT: Ensure all newlines, backslashes, double quotes, and control characters inside JSON string values are strictly escaped (e.g. use '\\n' for newlines, '\\"' for quotes) to avoid invalid JSON output.
-
---- IMAGE PROMPT GUIDELINES ---
-When generating the "imagePrompt", you MUST apply the stylistic theories from the following design guidelines, but DO NOT output the guidelines themselves.
-Keep the "imagePrompt" concise and extremely descriptive (maximum 500 characters).
-${socialMediaDesignSkill}
--------------------------------
-`;
+IMPORTANT: Ensure all newlines, backslashes, double quotes, and control characters inside JSON string values are strictly escaped (e.g. use '\\n' for newlines, '\\"' for quotes) to avoid invalid JSON output.`;
 
     let userPrompt = "";
 
-    if (tweakInstruction && tweakAsset && previousCampaignState) {
-      userPrompt = `You are refining an existing marketing campaign.
-Previous Campaign State:
-${JSON.stringify(previousCampaignState, null, 2)}
+    if (previousHtml) {
+      userPrompt = `You are refining an existing landing page HTML based on a new user instruction.
+Previous Landing Page HTML:
+\`\`\`html
+${previousHtml}
+\`\`\`
 
-The user wants to refine/tweak a specific campaign asset: "${tweakAsset}".
-Their specific tweak instructions are: "${tweakInstruction}"
+The user's instruction for this iteration is: "${prompt}"
+Tone of Voice: "${tone}"
+Color Theme Style: "${colorTheme}"
+Target Audience: "${targetAudience}"
 
-Please update the specified asset ("${tweakAsset}") in the campaign based on their instructions. 
-IMPORTANT: 
-- Keep all other assets (e.g. other copy blocks or HTML layout) exactly the same as in the Previous Campaign State, unless they must change to maintain design consistency with the tweaked asset.
-- If editing the landingPageHtml, ensure it remains a valid, full HTML document with the Tailwind script and matching styling.
-- Return the full updated campaign JSON object containing all keys.`;
+Please update the landing page HTML based on their instructions. 
+Ensure you return the FULL updated HTML document in "landingPageHtml". Do not truncate or use placeholders like "// rest of code goes here".
+Describe the modifications and design reasoning in "thinking".`;
     } else {
-      userPrompt = `Create an entire, high-converting multi-asset marketing campaign for the following:
+      userPrompt = `Create a brand new, high-converting landing page.
 Product/Service Description: "${prompt}"
 Tone of Voice: "${tone}"
 Color Theme Style: "${colorTheme}"
@@ -101,13 +80,13 @@ Make the landing page structure extremely modern, using grids, custom flex layou
 
     const genAI = new GoogleGenerativeAI(apiKey);
     
-    // Try multiple models in order of preference (best/newest to fallback older models) to handle 503/429 rate limits
+    // Try multiple models in order of preference to handle rate limits or transient errors
     const modelsToTry = [
-      "gemini-3.5-flash",
-      "gemini-3.1-flash-lite",
       "gemini-2.5-flash",
       "gemini-2.0-flash",
       "gemini-1.5-flash",
+      "gemini-3.5-flash",
+      "gemini-3.1-flash-lite",
       "gemini-flash-latest"
     ];
     let response;
@@ -123,54 +102,23 @@ Make the landing page structure extremely modern, using grids, custom flex layou
             responseSchema: {
               type: SchemaType.OBJECT,
               properties: {
-                socialCopy: { 
+                thinking: { 
                   type: SchemaType.STRING,
-                  description: "Compelling social media post copy."
-                },
-                adCopy: {
-                  type: SchemaType.OBJECT,
-                  properties: {
-                    googleSearch: {
-                      type: SchemaType.OBJECT,
-                      properties: {
-                        headline: { type: SchemaType.STRING },
-                        description: { type: SchemaType.STRING }
-                      },
-                      required: ["headline", "description"]
-                    },
-                    facebookFeed: {
-                      type: SchemaType.OBJECT,
-                      properties: {
-                        headline: { type: SchemaType.STRING },
-                        description: { type: SchemaType.STRING },
-                        cta: { type: SchemaType.STRING }
-                      },
-                      required: ["headline", "description", "cta"]
-                    }
-                  },
-                  required: ["googleSearch", "facebookFeed"]
-                },
-                imagePrompt: { 
-                  type: SchemaType.STRING,
-                  description: "Visual generation prompt."
-                },
-                imageKeywords: {
-                  type: SchemaType.STRING,
-                  description: "A single primary keyword or two comma-separated words representing the main subject (e.g., 'barber', 'car', 'lamp') to search for placeholder images."
+                  description: "A summary message of changes and design choices."
                 },
                 landingPageHtml: { 
                   type: SchemaType.STRING,
                   description: "Full, self-contained HTML page using Tailwind CSS."
                 }
               },
-              required: ["socialCopy", "adCopy", "imagePrompt", "imageKeywords", "landingPageHtml"]
+              required: ["thinking", "landingPageHtml"]
             },
             temperature: 0.7,
           },
           systemInstruction: systemInstruction,
         });
         if (response) {
-          console.log(`Successfully generated campaign content using model: ${modelName}`);
+          console.log(`Successfully generated website content using model: ${modelName}`);
           break;
         }
       } catch (err: any) {
@@ -214,7 +162,7 @@ Make the landing page structure extremely modern, using grids, custom flex layou
       console.error("Gemini failed to output valid JSON. Raw text was:", text);
       return NextResponse.json(
         { 
-          error: "AI response failed to parse as valid campaign data. Please try again.", 
+          error: "AI response failed to parse as valid website data. Please try again.", 
           raw: text,
           details: e.message 
         },
@@ -222,9 +170,9 @@ Make the landing page structure extremely modern, using grids, custom flex layou
       );
     }
   } catch (error: any) {
-    console.error("Generate Campaign API error:", error);
+    console.error("Generate Website API error:", error);
     return NextResponse.json(
-      { error: error.message || "Failed to generate campaign assets" },
+      { error: error.message || "Failed to generate website code" },
       { status: 500 }
     );
   }
