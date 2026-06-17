@@ -42,30 +42,18 @@ const COLOR_THEMES = [
   { name: "Dark Theme", value: "Dark Theme", bgClass: "bg-slate-900" }
 ];
 
-function BuildProgressIndicator() {
-  const [step, setStep] = useState(0)
-  
-  useEffect(() => {
-    const timers = [
-      setTimeout(() => setStep(1), 3500),
-      setTimeout(() => setStep(2), 7000),
-      setTimeout(() => setStep(3), 10500),
-      setTimeout(() => setStep(4), 14000),
-    ]
-    return () => timers.forEach(clearTimeout)
-  }, [])
+const BUILD_STEPS = [
+  "Analyzing prompt & mapping wireframe...",
+  "Drafting core component structures...",
+  "Applying premium Tailwind classes & theme...",
+  "Refining styles & verifying layout grids...",
+  "Rendering finalized website preview..."
+];
 
-  const steps = [
-    "Analyzing prompt & mapping wireframe...",
-    "Drafting core component structures...",
-    "Applying premium Tailwind classes & theme...",
-    "Refining styles & verifying layout grids...",
-    "Rendering finalized website preview..."
-  ]
-
+function BuildProgressIndicator({ step }: { step: number }) {
   return (
     <div className="space-y-2.5 bg-gray-55/60 p-5 rounded-2xl border border-gray-150 text-left max-w-sm mx-auto shadow-xs">
-      {steps.map((text, idx) => {
+      {BUILD_STEPS.map((text, idx) => {
         const isCurrent = idx === step
         const isCompleted = idx < step
         return (
@@ -108,6 +96,8 @@ function PlaygroundContent() {
   
   // Form Inputs & Chat Input
   const [chatInput, setChatInput] = useState("")
+  const [loaderMinimized, setLoaderMinimized] = useState(false)
+  const [buildStep, setBuildStep] = useState(0)
   const [tone, setTone] = useState("Professional")
   const [colorTheme, setColorTheme] = useState("Indigo")
   const [targetAudience, setTargetAudience] = useState("General Audience")
@@ -124,6 +114,21 @@ function PlaygroundContent() {
   const [iframeWidth, setIframeWidth] = useState<"100%" | "768px" | "375px">("100%")
 
   const chatEndRef = useRef<HTMLDivElement>(null)
+
+  // Lifted build step status and minimize state timers
+  useEffect(() => {
+    if (!isGenerating) {
+      setBuildStep(0)
+      return
+    }
+    const timers = [
+      setTimeout(() => setBuildStep(1), 3500),
+      setTimeout(() => setBuildStep(2), 7000),
+      setTimeout(() => setBuildStep(3), 10500),
+      setTimeout(() => setBuildStep(4), 14000),
+    ]
+    return () => timers.forEach(clearTimeout)
+  }, [isGenerating])
 
   // Client-side Authentication Guard
   useEffect(() => {
@@ -276,6 +281,7 @@ function PlaygroundContent() {
     if (!promptToSend.trim()) return
 
     setIsGenerating(true)
+    setLoaderMinimized(false)
     setError("")
     if (!overridePrompt) setChatInput("")
 
@@ -772,7 +778,7 @@ function PlaygroundContent() {
             <div className="flex-1 p-4 lg:p-6 flex justify-center items-center overflow-hidden relative w-full h-full">
               {/* Active Build Loader Overlay */}
               <AnimatePresence>
-                {isGenerating && (
+                {isGenerating && !loaderMinimized && (
                   <motion.div 
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -794,7 +800,7 @@ function PlaygroundContent() {
                       </div>
 
                       {/* Build Progress list */}
-                      <BuildProgressIndicator />
+                      <BuildProgressIndicator step={buildStep} />
 
                       {/* Animated linear progress bar */}
                       <div className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden max-w-xs mx-auto">
@@ -804,10 +810,38 @@ function PlaygroundContent() {
                           transition={{ duration: 16, ease: "easeOut" }}
                         />
                       </div>
+
+                      {/* Peeking minimize option */}
+                      <div className="pt-2">
+                        <button 
+                          type="button"
+                          onClick={() => setLoaderMinimized(true)}
+                          className="inline-flex items-center gap-2 px-4 py-2 border border-brand-border bg-white hover:bg-gray-55 text-gray-600 rounded-xl text-xs font-semibold shadow-3xs transition-all hover:scale-102"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          View Live Preview While Building
+                        </button>
+                      </div>
                     </div>
                   </motion.div>
                 )}
               </AnimatePresence>
+
+              {/* Floating Loader Status Bar (Visible when loader is minimized during generation) */}
+              {isGenerating && loaderMinimized && (
+                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-slate-900/90 text-white backdrop-blur-md shadow-md border border-slate-800 px-4 py-2.5 rounded-full z-20 flex items-center gap-3 text-xs transition-all">
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-brand-primary shrink-0" />
+                  <span className="font-semibold text-slate-300">AI: {BUILD_STEPS[buildStep]}</span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-slate-700" />
+                  <button 
+                    type="button"
+                    onClick={() => setLoaderMinimized(false)}
+                    className="text-brand-primary hover:text-brand-primary-light font-bold flex items-center gap-1 bg-brand-primary/10 hover:bg-brand-primary/20 px-2.5 py-1 rounded-full text-[10px] uppercase tracking-wide transition-colors"
+                  >
+                    Maximize Status
+                  </button>
+                </div>
+              )}
 
               {activeProject ? (
                 activeTab === "preview" ? (
