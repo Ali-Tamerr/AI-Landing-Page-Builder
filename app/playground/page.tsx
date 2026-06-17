@@ -42,6 +42,57 @@ const COLOR_THEMES = [
   { name: "Dark Theme", value: "Dark Theme", bgClass: "bg-slate-900" }
 ];
 
+function BuildProgressIndicator() {
+  const [step, setStep] = useState(0)
+  
+  useEffect(() => {
+    const timers = [
+      setTimeout(() => setStep(1), 3500),
+      setTimeout(() => setStep(2), 7000),
+      setTimeout(() => setStep(3), 10500),
+      setTimeout(() => setStep(4), 14000),
+    ]
+    return () => timers.forEach(clearTimeout)
+  }, [])
+
+  const steps = [
+    "Analyzing prompt & mapping wireframe...",
+    "Drafting core component structures...",
+    "Applying premium Tailwind classes & theme...",
+    "Refining styles & verifying layout grids...",
+    "Rendering finalized website preview..."
+  ]
+
+  return (
+    <div className="space-y-2.5 bg-gray-55/60 p-5 rounded-2xl border border-gray-150 text-left max-w-sm mx-auto shadow-xs">
+      {steps.map((text, idx) => {
+        const isCurrent = idx === step
+        const isCompleted = idx < step
+        return (
+          <div key={idx} className="flex items-center gap-3 text-xs transition-opacity duration-300">
+            {isCompleted ? (
+              <span className="w-4 h-4 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 font-extrabold text-[9px] shrink-0">✓</span>
+            ) : isCurrent ? (
+              <Loader2 className="w-4 h-4 animate-spin text-brand-primary shrink-0" />
+            ) : (
+              <span className="w-4 h-4 rounded-full border border-gray-200 shrink-0" />
+            )}
+            <span className={`font-semibold truncate ${
+              isCompleted 
+                ? "text-gray-400 line-through decoration-gray-300" 
+                : isCurrent 
+                  ? "text-brand-primary" 
+                  : "text-gray-500"
+            }`}>
+              {text}
+            </span>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 function PlaygroundContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -718,7 +769,46 @@ function PlaygroundContent() {
             </div>
 
             {/* Sandbox Canvas */}
-            <div className="flex-1 p-4 lg:p-6 flex justify-center items-center overflow-hidden relative">
+            <div className="flex-1 p-4 lg:p-6 flex justify-center items-center overflow-hidden relative w-full h-full">
+              {/* Active Build Loader Overlay */}
+              <AnimatePresence>
+                {isGenerating && (
+                  <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="absolute inset-0 bg-white/80 backdrop-blur-md z-20 flex flex-col items-center justify-center p-6 text-center select-none animate-fadeIn"
+                  >
+                    <div className="max-w-md w-full space-y-6">
+                      <div className="relative w-20 h-20 mx-auto">
+                        <div className="absolute inset-0 rounded-full border-4 border-brand-primary/10 animate-ping" />
+                        <div className="absolute inset-0 rounded-full border-4 border-t-brand-primary border-r-transparent border-b-transparent border-l-transparent animate-spin" />
+                        <div className="absolute inset-2 rounded-full bg-brand-primary/5 flex items-center justify-center text-brand-primary">
+                          <Sparkles className="w-8 h-8 animate-pulse" />
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <h3 className="text-xl font-extrabold text-gray-950">AI Builder is constructing your site</h3>
+                        <p className="text-xs text-gray-500">Writing code structure, content blocks, Tailwind variables, and layout sections...</p>
+                      </div>
+
+                      {/* Build Progress list */}
+                      <BuildProgressIndicator />
+
+                      {/* Animated linear progress bar */}
+                      <div className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden max-w-xs mx-auto">
+                        <motion.div 
+                          className="h-full bg-linear-to-r from-brand-primary to-indigo-600"
+                          animate={{ width: ["0%", "98%"] }}
+                          transition={{ duration: 16, ease: "easeOut" }}
+                        />
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
               {activeProject ? (
                 activeTab === "preview" ? (
                   <div 
@@ -745,7 +835,7 @@ function PlaygroundContent() {
                 ) : (
                   /* Code view code panel */
                   <div className="w-full h-full max-w-5xl bg-slate-900 border border-slate-950 rounded-2xl overflow-hidden shadow-lg flex flex-col">
-                    <div className="bg-slate-950 px-4 py-2 text-[10px] text-slate-400 font-mono flex items-center border-b border-slate-900 shrink-0">
+                    <div className="bg-slate-955 px-4 py-2 text-[10px] text-slate-400 font-mono flex items-center border-b border-slate-900 shrink-0">
                       <span>index.html</span>
                       <span className="ml-auto text-brand-primary font-bold">Pure Tailwind HTML</span>
                     </div>
