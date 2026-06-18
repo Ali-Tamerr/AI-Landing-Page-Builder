@@ -356,6 +356,7 @@ function CodeHighlighter({ code, language, onChange }: { code: string; language:
     fontSize: '12px',
     lineHeight: '20px',
     tabSize: 2,
+    color: '#e2e8f0',
   };
 
   return (
