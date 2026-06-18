@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import { 
   ArrowLeft, Sparkles, Send, Loader2, MessageSquare, Plus, Trash2, Menu, X,
-  Copy, Download, Monitor, Tablet, Smartphone, Code, Eye, Info, ChevronDown, Settings, Globe, FileText,
+  Copy, Download, Monitor, Tablet, Smartphone, Code, Eye, Info, ChevronDown, ChevronLeft, ChevronRight, Settings, Globe, FileText,
   FileCode, Paintbrush, Braces, FileJson
 } from "lucide-react"
 import { Button } from "@/components/ui/Button"
@@ -368,6 +368,7 @@ function PlaygroundContent() {
   const [isGenerating, setIsGenerating] = useState(false)
   const [error, setError] = useState("")
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [copiedStates, setCopiedStates] = useState<{ [key: string]: boolean }>({})
 
   // Workspace controls
@@ -799,7 +800,7 @@ function PlaygroundContent() {
       )}
 
       {/* Sidebar: Projects history */}
-      <aside className={`${sidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0 fixed md:static inset-y-0 left-0 z-40 w-72 bg-white border-r border-brand-border transition-transform duration-300 flex flex-col shrink-0`}>
+      <aside className={`${sidebarOpen ? "translate-x-0" : "-translate-x-full"} ${sidebarCollapsed ? "md:-translate-x-full md:w-0 md:opacity-0 md:pointer-events-none md:border-r-0" : "md:translate-x-0 md:w-72"} fixed md:static inset-y-0 left-0 z-40 bg-white border-r border-brand-border transition-all duration-300 flex flex-col shrink-0 overflow-hidden`}>
         <div className="p-4 border-b border-brand-border flex items-center justify-between bg-white shrink-0 h-16">
           <Link href="/" className="flex items-center gap-2 text-gray-500 hover:text-gray-900 transition-colors">
             <ArrowLeft className="w-5 h-5" />
@@ -857,6 +858,17 @@ function PlaygroundContent() {
           )}
         </div>
 
+        {/* Collapse button above profile */}
+        <div className="hidden md:flex px-4 py-2 justify-start border-t border-brand-border bg-white shrink-0">
+          <button
+            onClick={() => setSidebarCollapsed(true)}
+            className="p-2 rounded-xl border border-brand-border hover:bg-gray-50 text-gray-500 hover:text-gray-900 transition-all shadow-3xs"
+            title="Collapse Sidebar"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+        </div>
+
         {/* User profile / Logout */}
         <div className="p-4 border-t border-brand-border bg-white shrink-0">
           <div className="flex items-center gap-3 mb-3 px-1">
@@ -895,7 +907,18 @@ function PlaygroundContent() {
       </aside>
 
       {/* Main Workspace Frame */}
-      <main className="flex-1 flex flex-col h-full min-w-0 bg-gray-50/50">
+      <main className="flex-1 flex flex-col h-full min-w-0 bg-gray-50/50 relative">
+        {/* Floating Expand Sidebar Button on Desktop */}
+        {sidebarCollapsed && (
+          <button 
+            onClick={() => setSidebarCollapsed(false)}
+            className="hidden md:flex absolute left-4 top-4 z-50 p-2 bg-white hover:bg-gray-50 border border-brand-border rounded-xl shadow-xs text-gray-500 hover:text-gray-900 transition-all"
+            title="Expand Sidebar"
+          >
+            <ChevronRight className="w-5 h-5" />
+          </button>
+        )}
+
         {/* Mobile Header Bar */}
         <header className="md:hidden h-16 border-b border-brand-border flex items-center justify-between px-4 bg-white shrink-0 z-20 shadow-xs">
           <div className="flex items-center gap-3">
