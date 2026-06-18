@@ -21,6 +21,12 @@ interface ChatMessage {
   createdAt: number;
 }
 
+interface ProjectFile {
+  name: string;
+  content: string;
+  language: "html" | "css" | "javascript" | "json";
+}
+
 interface WebProject {
   id: string;
   title: string;
@@ -29,6 +35,8 @@ interface WebProject {
   colorTheme: string;
   targetAudience: string;
   landingPageHtml: string;
+  files?: ProjectFile[];
+  activeFileName?: string;
   messages: ChatMessage[];
   createdAt: number;
 }
@@ -83,29 +91,103 @@ function BuildProgressIndicator({ step }: { step: number }) {
 }
 
 function parseStreamingMarkdown(text: string) {
-  const codeBlockStart = "```html";
-  const codeBlockEnd = "```";
+  const files: ProjectFile[] = [];
   
-  const startIdx = text.indexOf(codeBlockStart);
-  if (startIdx === -1) {
+  // Regex to match [File: filename.ext] followed by code blocks
+  const fileRegex = /\[File:\s*([^\]]+)\][\s\r\n]*```(html|css|javascript|js|json)[\s\r\n]*([\s\S]*?)(?:```|$)/gi;
+  
+  let match;
+  let thinking = "";
+  
+  const firstMatchIndex = text.search(/\[File:\s*[^\]]+\]/i);
+  if (firstMatchIndex !== -1) {
+    thinking = text.substring(0, firstMatchIndex).trim();
+  } else {
+    // Backward compatibility check for normal ```html blocks without [File: filename.ext]
+    const codeBlockStart = "```html";
+    const startIdx = text.indexOf(codeBlockStart);
+    if (startIdx !== -1) {
+      thinking = text.substring(0, startIdx).trim();
+      let html = text.substring(startIdx + codeBlockStart.length);
+      const endIdx = html.indexOf("```");
+      if (endIdx !== -1) {
+        html = html.substring(0, endIdx);
+      }
+      return {
+        thinking,
+        files: [{ name: "index.html", content: html.trim(), language: "html" as const }]
+      };
+    }
     return {
       thinking: text,
-      html: ""
+      files: []
     };
   }
-  
-  const thinking = text.substring(0, startIdx).trim();
-  let html = text.substring(startIdx + codeBlockStart.length);
-  
-  const endIdx = html.indexOf(codeBlockEnd);
-  if (endIdx !== -1) {
-    html = html.substring(0, endIdx);
+
+  while ((match = fileRegex.exec(text)) !== null) {
+    const fileName = match[1].trim();
+    let lang = match[2].toLowerCase();
+    if (lang === "js") lang = "javascript";
+    const fileContent = match[3].trim();
+    
+    files.push({
+      name: fileName,
+      content: fileContent,
+      language: lang as "html" | "css" | "javascript" | "json"
+    });
   }
   
   return {
     thinking,
-    html: html.trim()
+    files
   };
+}
+
+function compileProjectPreview(files: ProjectFile[], activeFileName: string = "index.html"): string {
+  const activeFile = files.find(f => f.name === activeFileName) || files.find(f => f.name.endsWith(".html")) || files[0];
+  if (!activeFile) return "";
+  if (activeFile.language !== "html") {
+    // Render source code preview or styling if active file is CSS/JS directly
+    return `<!DOCTYPE html><html><head><script src="https://cdn.tailwindcss.com"></script></head><body class="bg-slate-900 text-slate-100 p-6 font-mono text-sm whitespace-pre-wrap"><h2>${activeFile.name}</h2><hr class="border-slate-800 my-4" /><code>${activeFile.content}</code></body></html>`;
+  }
+
+  let htmlContent = activeFile.content;
+
+  // Resolve relative CSS files link: <link rel="stylesheet" href="style.css">
+  htmlContent = htmlContent.replace(/<link\s+[^>]*rel=["']stylesheet["'][^>]*href=["']([^"']+)["'][^>]*>/gi, (match, href) => {
+    const cssFile = files.find(f => f.name === href || f.name.endsWith("/" + href));
+    if (cssFile) {
+      return `<style data-file="${href}">${cssFile.content}</style>`;
+    }
+    return match;
+  });
+
+  // Resolve relative JS files script: <script src="script.js"></script>
+  htmlContent = htmlContent.replace(/<script\s+[^>]*src=["']([^"']+)["'][^>]*>\s*<\/script>/gi, (match, src) => {
+    const jsFile = files.find(f => f.name === src || f.name.endsWith("/" + src));
+    if (jsFile) {
+      return `<script data-file="${src}">${jsFile.content}</script>`;
+    }
+    return match;
+  });
+
+  // Intercept navigation clicks between local files in the preview iframe
+  const linkInterceptorScript = `
+<script>
+  document.addEventListener('click', function(e) {
+    const target = e.target.closest('a');
+    if (target && target.getAttribute('href')) {
+      const href = target.getAttribute('href');
+      if (!href.startsWith('http') && !href.startsWith('//') && !href.startsWith('#')) {
+        e.preventDefault();
+        window.parent.postMessage({ type: 'PREVIEW_NAVIGATE', fileName: href }, '*');
+      }
+    }
+  });
+</script>
+`;
+
+  return htmlContent + linkInterceptorScript;
 }
 
 
@@ -254,6 +336,26 @@ function PlaygroundContent() {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [projects, currentProjectId, isGenerating])
 
+  // Listen to message navigation from inside iframe preview
+  useEffect(() => {
+    const handleMessage = (e: MessageEvent) => {
+      if (e.data && e.data.type === "PREVIEW_NAVIGATE") {
+        const targetFile = e.data.fileName;
+        setProjects(prev => prev.map(p => {
+          if (p.id === currentProjectId) {
+            return {
+              ...p,
+              activeFileName: targetFile
+            }
+          }
+          return p
+        }))
+      }
+    }
+    window.addEventListener("message", handleMessage)
+    return () => window.removeEventListener("message", handleMessage)
+  }, [currentProjectId])
+
   const activeProject = projects.find(p => p.id === currentProjectId)
 
   // Copy handler
@@ -380,7 +482,8 @@ function PlaygroundContent() {
           tone,
           colorTheme,
           targetAudience,
-          previousHtml: previousHtmlString
+          previousHtml: previousHtmlString,
+          files: activeProject?.files || (previousHtmlString ? [{ name: "index.html", content: previousHtmlString, language: "html" }] : [])
         })
       })
 
@@ -403,7 +506,7 @@ function PlaygroundContent() {
       const decoder = new TextDecoder()
       let accumulatedText = ""
       let currentThinking = ""
-      let currentHtml = previousHtmlString
+      let currentFiles: ProjectFile[] = activeProject?.files || []
       let hasAutoMinimized = false
       let lastIframeUpdateTime = 0
 
@@ -416,8 +519,8 @@ function PlaygroundContent() {
 
         const parsed = parseStreamingMarkdown(accumulatedText)
         currentThinking = parsed.thinking
-        if (parsed.html) {
-          currentHtml = parsed.html
+        if (parsed.files && parsed.files.length > 0) {
+          currentFiles = parsed.files
           // Auto-minimize the loader overlay so the user sees live HTML rendering
           if (!hasAutoMinimized) {
             hasAutoMinimized = true
@@ -441,9 +544,11 @@ function PlaygroundContent() {
         // Update local state in real-time
         setProjects(prev => prev.map(p => {
           if (p.id === tempProjectId) {
+            const activeFile = p.activeFileName || "index.html"
             return {
               ...p,
-              landingPageHtml: shouldUpdateIframe ? currentHtml : p.landingPageHtml,
+              files: currentFiles,
+              landingPageHtml: shouldUpdateIframe ? compileProjectPreview(currentFiles, activeFile) : p.landingPageHtml,
               messages: [...updatedMessages, streamingAiMsg]
             }
           }
@@ -460,11 +565,13 @@ function PlaygroundContent() {
       }
 
       const finalMessages = [...updatedMessages, finalAssistantMessage]
+      const finalPreviewHtml = compileProjectPreview(currentFiles, activeProject?.activeFileName || "index.html")
 
       if (!isNewProject && activeProject) {
         const refinedProject: WebProject = {
           ...activeProject,
-          landingPageHtml: currentHtml,
+          files: currentFiles,
+          landingPageHtml: finalPreviewHtml,
           messages: finalMessages
         }
         const updatedList = projects.map(p => p.id === refinedProject.id ? refinedProject : p)
@@ -478,7 +585,9 @@ function PlaygroundContent() {
           tone,
           colorTheme,
           targetAudience,
-          landingPageHtml: currentHtml,
+          files: currentFiles,
+          landingPageHtml: finalPreviewHtml,
+          activeFileName: "index.html",
           messages: finalMessages,
           createdAt: Date.now()
         }
@@ -943,6 +1052,41 @@ function PlaygroundContent() {
 
             </div>
 
+            {/* Project Files Selector Bar */}
+            {activeProject && activeProject.files && activeProject.files.length > 0 && (
+              <div className="bg-gray-50 border-b border-brand-border px-4 py-2 flex items-center gap-2 overflow-x-auto scrollbar-none shrink-0">
+                <span className="text-[10px] font-bold text-gray-400 uppercase mr-2 shrink-0">Files:</span>
+                {activeProject.files.map(file => {
+                  const isActive = (activeProject.activeFileName || "index.html") === file.name;
+                  return (
+                    <button
+                      key={file.name}
+                      onClick={() => {
+                        setProjects(prev => prev.map(p => {
+                          if (p.id === activeProject.id) {
+                            return {
+                              ...p,
+                              activeFileName: file.name,
+                              landingPageHtml: compileProjectPreview(p.files || [], file.name)
+                            }
+                          }
+                          return p;
+                        }))
+                      }}
+                      className={`px-3 py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all border shrink-0 ${
+                        isActive 
+                          ? "bg-brand-primary/10 border-brand-primary text-brand-primary font-bold" 
+                          : "bg-white border-brand-border text-gray-600 hover:text-gray-900"
+                      }`}
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                      {file.name}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
             {/* Sandbox Canvas */}
             <div className="flex-1 p-4 lg:p-6 flex justify-center items-center overflow-hidden relative w-full h-full">
               {/* Active Build Loader Overlay */}
@@ -1039,11 +1183,14 @@ function PlaygroundContent() {
                   /* Code view code panel */
                   <div className="w-full h-full max-w-5xl bg-slate-900 border border-slate-950 rounded-2xl overflow-hidden shadow-lg flex flex-col">
                     <div className="bg-slate-955 px-4 py-2 text-[10px] text-slate-400 font-mono flex items-center border-b border-slate-900 shrink-0">
-                      <span>index.html</span>
+                      <span>{activeProject.activeFileName || "index.html"}</span>
                       <span className="ml-auto text-brand-primary font-bold">Pure Tailwind HTML</span>
                     </div>
                     <pre className="flex-1 overflow-auto p-5 text-left text-xs font-mono text-emerald-400 leading-relaxed select-text select-all bg-slate-950/80">
-                      <code>{activeProject.landingPageHtml}</code>
+                      <code>{
+                        (activeProject.files && activeProject.files.find(f => f.name === (activeProject.activeFileName || "index.html"))?.content) 
+                        || activeProject.landingPageHtml
+                      }</code>
                     </pre>
                   </div>
                 )

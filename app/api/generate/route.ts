@@ -30,12 +30,39 @@ export async function POST(req: Request) {
     }
 
     const systemInstruction = `You are a world-class frontend engineer and UI/UX expert.
-You build premium, beautiful, modern, high-converting landing pages.
+You build premium, beautiful, modern, high-converting websites and landing pages.
+You support creating multiple HTML, CSS, and JS files per project to keep the code modular and clean if needed (e.g. index.html, about.html, style.css, script.js, etc).
 You must output your response in standard Markdown format:
-1. First, write a short, friendly explanation/thinking section (approx 50-100 words) written to the user explaining what design choices you made, what sections you created/modified, and how it aligns with their request.
-2. Then, write the complete HTML document inside a single \`\`\`html and \`\`\` code block.
+1. First, write a short, friendly explanation/thinking section (approx 50-100 words) written to the user explaining what design choices you made, what files you created/modified, and how they align with their request.
+2. Then, write each file in the project prefixed by "[File: filename.ext]" followed by the file's code block.
 
-Landing Page HTML Guidelines:
+Format example:
+[File: index.html]
+\`\`\`html
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  ...
+  <script src="script.js"></script>
+</body>
+</html>
+\`\`\`
+
+[File: style.css]
+\`\`\`css
+/* Custom styles here */
+\`\`\`
+
+[File: script.js]
+\`\`\`javascript
+// Custom scripting here
+\`\`\`
+
+Landing Page Guidelines:
 - It MUST include a \`<script src="https://cdn.tailwindcss.com"></script>\` tag and a modern premium Google Font (like Plus Jakarta Sans, Outfit, or Inter) in the \`<head>\` for gorgeous layout styling.
 - The document MUST be a complete, long-form website with distinct components:
   1. A sleek Sticky Header with logo and navigation links.
@@ -53,7 +80,20 @@ Landing Page HTML Guidelines:
 
     let userPrompt = "";
 
-    if (previousHtml) {
+    if (body.files && body.files.length > 0) {
+      userPrompt = `You are refining an existing web project based on a new user instruction.
+Current Project Files:
+${body.files.map((f: any) => `[File: ${f.name}]\n\`\`\`${f.language}\n${f.content}\n\`\`\``).join("\n\n")}
+
+The user's instruction for this iteration is: "${prompt}"
+Tone of Voice: "${tone}"
+Color Theme Style: "${colorTheme}"
+Target Audience: "${targetAudience}"
+
+Please update the project files based on their instructions. You can add new HTML, CSS, or JS files, or modify/remove existing files.
+Ensure you return the FULL updated files inside their respective \`[File: filename.ext]\` sections and code blocks. Do not truncate or use placeholders.
+Describe the modifications and design reasoning in the thinking section at the start of your message.`;
+    } else if (previousHtml) {
       userPrompt = `You are refining an existing landing page HTML based on a new user instruction.
 Previous Landing Page HTML:
 \`\`\`html
@@ -66,16 +106,16 @@ Color Theme Style: "${colorTheme}"
 Target Audience: "${targetAudience}"
 
 Please update the landing page HTML based on their instructions. 
-Ensure you return the FULL updated HTML document inside the \`\`\`html and \`\`\` code block. Do not truncate or use placeholders like "// rest of code goes here".
+Ensure you return the FULL updated HTML document inside a \`[File: index.html]\` section and code block. Do not truncate or use placeholders.
 Describe the modifications and design reasoning in the thinking section at the start of your message.`;
     } else {
-      userPrompt = `Create a brand new, high-converting landing page.
+      userPrompt = `Create a brand new web project. You can generate multiple files (e.g. index.html, style.css, script.js) to build a gorgeous landing page or multi-page experience.
 Product/Service Description: "${prompt}"
 Tone of Voice: "${tone}"
 Color Theme Style: "${colorTheme}"
 Target Audience: "${targetAudience}"
 
-Make the landing page structure extremely modern, using grids, custom flex layouts, nice gradients, beautiful interactive card hovering animations, and high contrast. Let the copy sell the value proposition elegantly.`;
+Make the design extremely modern, using grids, custom flex layouts, nice gradients, beautiful interactive card hovering animations, and high contrast. Let the copy sell the value proposition elegantly.`;
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
