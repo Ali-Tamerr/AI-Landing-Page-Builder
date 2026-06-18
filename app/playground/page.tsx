@@ -404,6 +404,7 @@ function PlaygroundContent() {
       let currentThinking = ""
       let currentHtml = previousHtmlString
       let hasAutoMinimized = false
+      let lastIframeUpdateTime = 0
 
       while (true) {
         const { done, value } = await reader.read()
@@ -430,12 +431,18 @@ function PlaygroundContent() {
           createdAt: Date.now()
         }
 
+        const now = Date.now()
+        const shouldUpdateIframe = now - lastIframeUpdateTime > 500
+        if (shouldUpdateIframe) {
+          lastIframeUpdateTime = now
+        }
+
         // Update local state in real-time
         setProjects(prev => prev.map(p => {
           if (p.id === tempProjectId) {
             return {
               ...p,
-              landingPageHtml: currentHtml,
+              landingPageHtml: shouldUpdateIframe ? currentHtml : p.landingPageHtml,
               messages: [...updatedMessages, streamingAiMsg]
             }
           }
