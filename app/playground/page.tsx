@@ -5,7 +5,8 @@ import { useSearchParams, useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import { 
   ArrowLeft, Sparkles, Send, Loader2, MessageSquare, Plus, Trash2, Menu, X,
-  Copy, Download, Monitor, Tablet, Smartphone, Code, Eye, Info, ChevronDown, Settings, Globe, FileText
+  Copy, Download, Monitor, Tablet, Smartphone, Code, Eye, Info, ChevronDown, Settings, Globe, FileText,
+  FileCode, Paintbrush, Braces, FileJson
 } from "lucide-react"
 import { Button } from "@/components/ui/Button"
 import Link from "next/link"
@@ -13,6 +14,32 @@ import { auth, db } from "@/lib/firebase"
 import { onAuthStateChanged, signOut } from "firebase/auth"
 import { collection, doc, setDoc, deleteDoc, getDocs, query, orderBy } from "firebase/firestore"
 import ReactMarkdown from "react-markdown"
+
+// Custom SVG Icons for File Types
+const HtmlIcon = ({ className = "w-3.5 h-3.5" }: { className?: string }) => (
+  <svg viewBox="0 0 512 512" className={className} xmlns="http://www.w3.org/2000/svg">
+    <path fill="#E34F26" d="M71 460L35 0h442l-36 460-185 52z"/>
+    <path fill="#EF652A" d="M256 472l152-42 30-340H256z"/>
+    <path fill="#EBEBEB" d="M256 208h-75l-5-58h80V90H116l14 176h126zM256 352l-1 0-53-15-4-39h-60l10 104 108 30z"/>
+    <path fill="#FFFFFF" d="M256 208v58h69l-7 71-62 15v80l108-30 14-160 5-34zM256 90v60h134l5-60z"/>
+  </svg>
+);
+
+const CssIcon = ({ className = "w-3.5 h-3.5" }: { className?: string }) => (
+  <svg viewBox="0 0 512 512" className={className} xmlns="http://www.w3.org/2000/svg">
+    <path fill="#1572B6" d="M71 460L35 0h442l-36 460-185 52z"/>
+    <path fill="#33A9DC" d="M256 472l152-42 30-340H256z"/>
+    <path fill="#FFF" d="M256 208h113l-11 138-102 28v63l171-46 3-36 25-322H256z"/>
+    <path fill="#EBEBEB" d="M125 108l8 97H256v-75h-63l-5-68H256V0H109l17 212h130v-76h-57l-5-68H256V0zM256 271v-62H142l8 104H256v-42zM256 343l-53-14-3-44h-63l8 101 111 31v-74z"/>
+  </svg>
+);
+
+const JsIcon = ({ className = "w-3.5 h-3.5" }: { className?: string }) => (
+  <svg viewBox="0 0 512 512" className={className} xmlns="http://www.w3.org/2000/svg">
+    <path fill="#F7DF1E" d="M0 0h512v512H0z"/>
+    <path d="M293 382c2 41 25 69 65 69 33 0 57-21 57-105v-227h-74v229c0 45-18 60-43 60-22 0-38-12-44-36zm-153 13c7 29 31 47 68 47 39 0 68-17 68-60 0-35-21-51-76-75-60-26-93-48-93-115 0-58 43-101 107-101 53 0 90 27 100 74l-64 37c-7-25-23-38-42-38-23 0-40 14-40 38 0 26 15 37 60 57 70 30 110 55 110 133 0 71-47 114-119 114-76 0-118-39-127-94z"/>
+  </svg>
+);
 
 interface ChatMessage {
   id: string;
@@ -1182,6 +1209,11 @@ function PlaygroundContent() {
                 <span className="text-[10px] font-bold text-gray-400 uppercase mr-2 shrink-0">Files:</span>
                 {activeProject.files.map(file => {
                   const isActive = (activeProject.activeFileName || "index.html") === file.name;
+                  const isHtml = file.name.endsWith(".html");
+                  const isCss = file.name.endsWith(".css");
+                  const isJs = file.name.endsWith(".js") || file.name.endsWith(".javascript");
+                  const isJson = file.name.endsWith(".json");
+
                   return (
                     <button
                       key={file.name}
@@ -1197,13 +1229,23 @@ function PlaygroundContent() {
                           return p;
                         }))
                       }}
-                      className={`px-3 py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all border shrink-0 ${
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all border shrink-0 ${
                         isActive 
-                          ? "bg-brand-primary/10 border-brand-primary text-brand-primary font-bold" 
+                          ? "bg-brand-primary/10 border-brand-primary text-brand-primary font-bold shadow-3xs" 
                           : "bg-white border-brand-border text-gray-600 hover:text-gray-900"
                       }`}
                     >
-                      <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                      {isHtml ? (
+                        <HtmlIcon className="w-3.5 h-3.5 shrink-0" />
+                      ) : isCss ? (
+                        <CssIcon className="w-3.5 h-3.5 shrink-0" />
+                      ) : isJs ? (
+                        <JsIcon className="w-3.5 h-3.5 rounded-xs shrink-0" />
+                      ) : isJson ? (
+                        <FileJson className="w-3.5 h-3.5 text-purple-500 shrink-0" />
+                      ) : (
+                        <FileText className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                      )}
                       {file.name}
                     </button>
                   );
@@ -1322,6 +1364,7 @@ function PlaygroundContent() {
                           const isHtml = file.name.endsWith(".html");
                           const isCss = file.name.endsWith(".css");
                           const isJs = file.name.endsWith(".js") || file.name.endsWith(".javascript");
+                          const isJson = file.name.endsWith(".json");
                           
                           return (
                             <button
@@ -1345,11 +1388,13 @@ function PlaygroundContent() {
                               }`}
                             >
                               {isHtml ? (
-                                <Globe className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                                <HtmlIcon className="w-3.5 h-3.5 shrink-0" />
                               ) : isCss ? (
-                                <Settings className="w-3.5 h-3.5 text-teal-400 shrink-0" />
+                                <CssIcon className="w-3.5 h-3.5 shrink-0" />
                               ) : isJs ? (
-                                <Code className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                                <JsIcon className="w-3.5 h-3.5 rounded-xs shrink-0" />
+                              ) : isJson ? (
+                                <FileJson className="w-3.5 h-3.5 text-purple-400 shrink-0" />
                               ) : (
                                 <FileText className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                               )}
