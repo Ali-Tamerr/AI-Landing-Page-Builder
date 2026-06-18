@@ -217,7 +217,21 @@ function compileProjectPreview(files: ProjectFile[], activeFileName: string = "i
   return htmlContent + linkInterceptorScript;
 }
 
-function CodeHighlighter({ code, language }: { code: string; language: string }) {
+function CodeHighlighter({ code, language, onChange }: { code: string; language: string; onChange: (val: string) => void }) {
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const preRef = useRef<HTMLPreElement>(null);
+  const gutterRef = useRef<HTMLDivElement>(null);
+
+  const handleScroll = (e: React.UIEvent<HTMLTextAreaElement>) => {
+    if (preRef.current) {
+      preRef.current.scrollTop = e.currentTarget.scrollTop;
+      preRef.current.scrollLeft = e.currentTarget.scrollLeft;
+    }
+    if (gutterRef.current) {
+      gutterRef.current.scrollTop = e.currentTarget.scrollTop;
+    }
+  };
+
   const highlightCode = (codeText: string, lang: string) => {
     if (lang === "html") {
       const parts = [];
@@ -334,10 +348,56 @@ function CodeHighlighter({ code, language }: { code: string; language: string })
     return [codeText];
   };
 
+  const lines = code.split("\n");
+  const lineCount = Math.max(lines.length, 1);
+
+  const textStyles: React.CSSProperties = {
+    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+    fontSize: '12px',
+    lineHeight: '20px',
+    tabSize: 2,
+  };
+
   return (
-    <pre className="flex-1 overflow-auto p-5 text-left text-xs font-mono leading-relaxed select-text select-all bg-slate-950/80">
-      <code>{highlightCode(code, language)}</code>
-    </pre>
+    <div className="flex-1 flex flex-row bg-slate-950 overflow-hidden relative min-h-0">
+      {/* Line Numbers Gutter */}
+      <div 
+        ref={gutterRef}
+        className="select-none text-right pr-3 pl-4 text-slate-600 bg-slate-950 border-r border-slate-900 select-none shrink-0 min-w-[3.5rem] overflow-y-hidden py-4 scrollbar-none"
+        style={{ ...textStyles }}
+      >
+        {Array.from({ length: lineCount }).map((_, idx) => (
+          <div key={idx} style={{ height: "20px" }}>{idx + 1}</div>
+        ))}
+      </div>
+
+      {/* Editor & Highlight Container */}
+      <div className="flex-1 relative overflow-hidden h-full">
+        {/* Transparent Textarea */}
+        <textarea
+          ref={textareaRef}
+          value={code}
+          onChange={(e) => onChange(e.target.value)}
+          onScroll={handleScroll}
+          className="absolute inset-0 w-full h-full p-4 bg-transparent text-transparent caret-white resize-none outline-none focus:ring-0 overflow-auto whitespace-pre z-10 font-medium"
+          style={{ 
+            ...textStyles,
+            WebkitTextFillColor: "transparent"
+          }}
+          spellCheck={false}
+        />
+        {/* Syntax Highlighted View */}
+        <pre
+          ref={preRef}
+          className="absolute inset-0 w-full h-full p-4 pointer-events-none overflow-hidden whitespace-pre bg-transparent m-0 scrollbar-none"
+          style={{ ...textStyles }}
+        >
+          <code style={{ ...textStyles }}>
+            {highlightCode(code, language)}
+          </code>
+        </pre>
+      </div>
+    </div>
   );
 }
 
@@ -1374,7 +1434,10 @@ function PlaygroundContent() {
                   </div>
                 ) : (
                   /* Code view split container */
-                  <div className="w-full h-full max-w-5xl bg-slate-900 border border-slate-950 rounded-2xl overflow-hidden shadow-lg flex flex-row">
+                  <div 
+                    className="h-full bg-slate-900 border border-slate-950 rounded-2xl overflow-hidden shadow-lg flex flex-row transition-all duration-300"
+                    style={{ width: iframeWidth }}
+                  >
                     
                     {/* File Explorer Sidebar */}
                     <div className="w-52 bg-slate-950 border-r border-slate-850 flex flex-col shrink-0 select-none">
@@ -1448,6 +1511,26 @@ function PlaygroundContent() {
                         language={
                           ((activeProject.files && activeProject.files.find(f => f.name === (activeProject.activeFileName || "index.html"))?.language) || "html")
                         } 
+                        onChange={(newContent) => {
+                          const activeFile = activeProject.activeFileName || "index.html";
+                          setProjects(prev => prev.map(p => {
+                            if (p.id === activeProject.id) {
+                              const updatedFiles = p.files ? p.files.map(f => {
+                                if (f.name === activeFile) {
+                                  return { ...f, content: newContent };
+                                }
+                                return f;
+                              }) : [{ name: "index.html", content: newContent, language: "html" as const }];
+
+                              return {
+                                ...p,
+                                files: updatedFiles,
+                                landingPageHtml: compileProjectPreview(updatedFiles, activeFile)
+                              };
+                            }
+                            return p;
+                          }));
+                        }}
                       />
                     </div>
 
