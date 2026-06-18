@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import { 
   ArrowLeft, Sparkles, Send, Loader2, MessageSquare, Plus, Trash2, Menu, X,
-  Copy, Download, Monitor, Tablet, Smartphone, Code, Eye, Info, ChevronDown, ChevronLeft, ChevronRight, Settings, Globe, FileText,
+  Copy, Download, Monitor, Tablet, Smartphone, Code, Eye, Info, ChevronDown, ChevronLeft, ChevronRight, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen, Settings, Globe, FileText,
   FileCode, Paintbrush, Braces, FileJson
 } from "lucide-react"
 import { Button } from "@/components/ui/Button"
@@ -800,124 +800,128 @@ function PlaygroundContent() {
       )}
 
       {/* Sidebar: Projects history */}
-      <aside className={`${sidebarOpen ? "translate-x-0" : "-translate-x-full"} ${sidebarCollapsed ? "md:-translate-x-full md:w-0 md:opacity-0 md:pointer-events-none md:border-r-0" : "md:translate-x-0 md:w-72"} fixed md:static inset-y-0 left-0 z-40 bg-white border-r border-brand-border transition-all duration-300 flex flex-col shrink-0 overflow-hidden`}>
-        <div className="p-4 border-b border-brand-border flex items-center justify-between bg-white shrink-0 h-16">
-          <Link href="/" className="flex items-center gap-2 text-gray-500 hover:text-gray-900 transition-colors">
-            <ArrowLeft className="w-5 h-5" />
-            <span className="font-semibold text-sm">Return Home</span>
-          </Link>
-          <button onClick={() => setSidebarOpen(false)} className="md:hidden text-gray-500 hover:text-gray-900 p-1">
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        <div className="p-4 shrink-0">
-          <Button onClick={startNewProject} variant="outline" className="w-full justify-start gap-2 border-brand-border bg-white hover:bg-brand-primary/5 text-brand-primary h-12 rounded-xl transition-all font-medium">
-            <Plus className="w-5 h-5" />
-            New Landing Page
-          </Button>
-        </div>
-
-        {/* Saved projects list */}
-        <div className="flex-1 overflow-y-auto p-3 pt-0 space-y-1.5 scrollbar-thin">
-          {projects.map(p => (
-            <div 
-              key={p.id} 
-              className={`group relative rounded-xl border transition-all duration-200 flex items-center ${
-                currentProjectId === p.id 
-                  ? "bg-brand-primary/5 border-brand-primary/20 text-brand-primary shadow-xs" 
-                  : "bg-white border-transparent hover:bg-gray-50 text-gray-600"
-              }`}
+      <aside className={`${sidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0 ${sidebarCollapsed ? "md:w-14" : "md:w-72"} fixed md:static inset-y-0 left-0 z-40 bg-white border-r border-brand-border transition-all duration-300 flex flex-col shrink-0 overflow-hidden`}>
+        {sidebarCollapsed ? (
+          <div className="flex-1 flex flex-col items-center py-4 bg-white shrink-0">
+            <button
+              onClick={() => setSidebarCollapsed(false)}
+              className="p-2 rounded-xl border border-brand-border hover:bg-gray-50 text-gray-500 hover:text-gray-900 transition-all shadow-3xs"
+              title="Expand Sidebar"
             >
-              <button
-                onClick={() => { 
-                  setCurrentProjectId(p.id); 
-                  if (window.innerWidth < 768) setSidebarOpen(false); 
-                }}
-                className="flex-1 py-3.5 pl-4 pr-10 flex items-center gap-3 text-left overflow-hidden"
-              >
-                <MessageSquare className="w-4 h-4 shrink-0 opacity-80" />
-                <div className="flex flex-col min-w-0">
-                  <span className="truncate text-sm font-semibold">{p.title}</span>
-                  <span className="text-[10px] text-gray-400 mt-0.5">{new Date(p.createdAt).toLocaleDateString()}</span>
-                </div>
-              </button>
-              <button 
-                onClick={(e) => handleDeleteProject(e, p.id)} 
-                className="p-2 opacity-0 group-hover:opacity-100 hover:text-red-500 transition-opacity absolute right-2 text-gray-400"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </div>
-          ))}
-          {projects.length === 0 && (
-            <div className="text-center text-sm text-gray-400 mt-12 px-4 py-8 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
-              <Sparkles className="w-8 h-8 text-gray-300 mx-auto mb-2.5" />
-              Your custom websites catalog will appear here.
-            </div>
-          )}
-        </div>
-
-        {/* Collapse button above profile */}
-        <div className="hidden md:flex px-4 py-2 justify-start border-t border-brand-border bg-white shrink-0">
-          <button
-            onClick={() => setSidebarCollapsed(true)}
-            className="p-2 rounded-xl border border-brand-border hover:bg-gray-50 text-gray-500 hover:text-gray-900 transition-all shadow-3xs"
-            title="Collapse Sidebar"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-        </div>
-
-        {/* User profile / Logout */}
-        <div className="p-4 border-t border-brand-border bg-white shrink-0">
-          <div className="flex items-center gap-3 mb-3 px-1">
-            {user?.photoURL ? (
-              <img 
-                src={user.photoURL} 
-                alt={user.displayName || "User Profile"} 
-                referrerPolicy="no-referrer"
-                className="w-8 h-8 rounded-full object-cover shrink-0 border border-brand-border"
-              />
-            ) : (
-              <div className="w-8 h-8 rounded-full bg-brand-primary/10 flex items-center justify-center text-brand-primary font-bold text-sm shrink-0">
-                {(user?.displayName || user?.email || "?").charAt(0).toUpperCase()}
-              </div>
-            )}
-            <div className="flex flex-col min-w-0">
-              <span className="text-xs font-semibold text-gray-900 truncate">
-                {user?.displayName || user?.email}
-              </span>
-              <span className="text-[10px] text-gray-400">Builder Workspace</span>
-            </div>
+              <PanelRightOpen className="w-5 h-5" />
+            </button>
           </div>
-          <Button 
-            onClick={async () => {
-              try {
-                await signOut(auth);
-                router.push("/");
-              } catch (err) {}
-            }} 
-            variant="outline" 
-            className="w-full justify-center gap-2 border-red-100 text-red-500 hover:bg-red-50 hover:border-red-200 h-10 rounded-xl text-xs font-semibold transition-colors"
-          >
-            Sign Out
-          </Button>
-        </div>
+        ) : (
+          <>
+            <div className="p-4 border-b border-brand-border flex items-center justify-between bg-white shrink-0 h-16">
+              <Link href="/" className="flex items-center gap-2 text-gray-500 hover:text-gray-900 transition-colors">
+                <ArrowLeft className="w-5 h-5" />
+                <span className="font-semibold text-sm">Return Home</span>
+              </Link>
+              <button onClick={() => setSidebarOpen(false)} className="md:hidden text-gray-500 hover:text-gray-900 p-1">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-4 shrink-0">
+              <Button onClick={startNewProject} variant="outline" className="w-full justify-start gap-2 border-brand-border bg-white hover:bg-brand-primary/5 text-brand-primary h-12 rounded-xl transition-all font-medium">
+                <Plus className="w-5 h-5" />
+                New Landing Page
+              </Button>
+            </div>
+
+            {/* Saved projects list */}
+            <div className="flex-1 overflow-y-auto p-3 pt-0 space-y-1.5 scrollbar-thin">
+              {projects.map(p => (
+                <div 
+                  key={p.id} 
+                  className={`group relative rounded-xl border transition-all duration-200 flex items-center ${
+                    currentProjectId === p.id 
+                      ? "bg-brand-primary/5 border-brand-primary/20 text-brand-primary shadow-xs" 
+                      : "bg-white border-transparent hover:bg-gray-50 text-gray-600"
+                  }`}
+                >
+                  <button
+                    onClick={() => { 
+                      setCurrentProjectId(p.id); 
+                      if (window.innerWidth < 768) setSidebarOpen(false); 
+                    }}
+                    className="flex-1 py-3.5 pl-4 pr-10 flex items-center gap-3 text-left overflow-hidden"
+                  >
+                    <MessageSquare className="w-4 h-4 shrink-0 opacity-80" />
+                    <div className="flex flex-col min-w-0">
+                      <span className="truncate text-sm font-semibold">{p.title}</span>
+                      <span className="text-[10px] text-gray-400 mt-0.5">{new Date(p.createdAt).toLocaleDateString()}</span>
+                    </div>
+                  </button>
+                  <button 
+                    onClick={(e) => handleDeleteProject(e, p.id)} 
+                    className="p-2 opacity-0 group-hover:opacity-100 hover:text-red-500 transition-opacity absolute right-2 text-gray-400"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+              {projects.length === 0 && (
+                <div className="text-center text-sm text-gray-400 mt-12 px-4 py-8 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+                  <Sparkles className="w-8 h-8 text-gray-300 mx-auto mb-2.5" />
+                  Your custom websites catalog will appear here.
+                </div>
+              )}
+            </div>
+
+            {/* Collapse button above profile */}
+            <div className="hidden md:flex px-4 py-2 justify-start bg-white shrink-0">
+              <button
+                onClick={() => setSidebarCollapsed(true)}
+                className="p-2 rounded-xl border border-brand-border hover:bg-gray-50 text-gray-500 hover:text-gray-900 transition-all shadow-3xs"
+                title="Collapse Sidebar"
+              >
+                <PanelRightClose className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* User profile / Logout */}
+            <div className="p-4 border-t border-brand-border bg-white shrink-0">
+              <div className="flex items-center gap-3 mb-3 px-1">
+                {user?.photoURL ? (
+                  <img 
+                    src={user.photoURL} 
+                    alt={user.displayName || "User Profile"} 
+                    referrerPolicy="no-referrer"
+                    className="w-8 h-8 rounded-full object-cover shrink-0 border border-brand-border"
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-brand-primary/10 flex items-center justify-center text-brand-primary font-bold text-sm shrink-0">
+                    {(user?.displayName || user?.email || "?").charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <div className="flex flex-col min-w-0">
+                  <span className="text-xs font-semibold text-gray-900 truncate">
+                    {user?.displayName || user?.email}
+                  </span>
+                  <span className="text-[10px] text-gray-400">Builder Workspace</span>
+                </div>
+              </div>
+              <Button 
+                onClick={async () => {
+                  try {
+                    await signOut(auth);
+                    router.push("/");
+                  } catch (err) {}
+                }} 
+                variant="outline" 
+                className="w-full justify-center gap-2 border-red-100 text-red-500 hover:bg-red-50 hover:border-red-200 h-10 rounded-xl text-xs font-semibold transition-colors"
+              >
+                Sign Out
+              </Button>
+            </div>
+          </>
+        )}
       </aside>
 
       {/* Main Workspace Frame */}
       <main className="flex-1 flex flex-col h-full min-w-0 bg-gray-50/50 relative">
-        {/* Floating Expand Sidebar Button on Desktop */}
-        {sidebarCollapsed && (
-          <button 
-            onClick={() => setSidebarCollapsed(false)}
-            className="hidden md:flex absolute left-4 top-4 z-50 p-2 bg-white hover:bg-gray-50 border border-brand-border rounded-xl shadow-xs text-gray-500 hover:text-gray-900 transition-all"
-            title="Expand Sidebar"
-          >
-            <ChevronRight className="w-5 h-5" />
-          </button>
-        )}
 
         {/* Mobile Header Bar */}
         <header className="md:hidden h-16 border-b border-brand-border flex items-center justify-between px-4 bg-white shrink-0 z-20 shadow-xs">
