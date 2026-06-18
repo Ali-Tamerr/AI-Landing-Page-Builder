@@ -431,6 +431,8 @@ function PlaygroundContent() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [copiedStates, setCopiedStates] = useState<{ [key: string]: boolean }>({})
+  const [skills, setSkills] = useState<{ name: string; label: string }[]>([])
+  const [selectedSkill, setSelectedSkill] = useState<string>("ui-ux-pro-max")
 
   // Workspace controls
   const [activeTab, setActiveTab] = useState<"preview" | "code">("preview")
@@ -452,6 +454,16 @@ function PlaygroundContent() {
     ]
     return () => timers.forEach(clearTimeout)
   }, [isGenerating])
+
+  // Fetch available skill files from API
+  useEffect(() => {
+    fetch("/api/skills")
+      .then(res => res.json())
+      .then(data => {
+        if (data.skills) setSkills(data.skills)
+      })
+      .catch(err => console.error("Failed to load skills:", err))
+  }, [])
 
   // Client-side Authentication Guard
   useEffect(() => {
@@ -696,7 +708,8 @@ function PlaygroundContent() {
           colorTheme,
           targetAudience,
           previousHtml: previousHtmlString,
-          files: activeProject?.files || (previousHtmlString ? [{ name: "index.html", content: previousHtmlString, language: "html" }] : [])
+          files: activeProject?.files || (previousHtmlString ? [{ name: "index.html", content: previousHtmlString, language: "html" }] : []),
+          selectedSkill
         })
       })
 
@@ -1067,6 +1080,20 @@ function PlaygroundContent() {
                         placeholder="E.g. Developers, Small business owners..."
                         className="w-full h-9 border border-brand-border rounded-lg bg-white px-3 focus:ring-2 focus:ring-brand-primary/20"
                       />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1.5">AI Generation Skill (Guidelines)</label>
+                      <select 
+                        value={selectedSkill}
+                        onChange={(e) => setSelectedSkill(e.target.value)}
+                        className="w-full h-9 border border-brand-border rounded-lg bg-white px-2 focus:ring-2 focus:ring-brand-primary/20 font-medium text-gray-700"
+                      >
+                        {skills.length === 0 ? (
+                          <option value="frontend-design.md">frontend-design.md</option>
+                        ) : (
+                          skills.map(s => <option key={s.name} value={s.name}>{s.label}</option>)
+                        )}
+                      </select>
                     </div>
                   </div>
                 </motion.div>

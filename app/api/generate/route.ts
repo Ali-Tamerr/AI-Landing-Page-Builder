@@ -1,4 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import fs from "fs";
+import path from "path";
+import { execSync } from "child_process";
 
 export async function POST(req: Request) {
   try {
@@ -9,6 +12,7 @@ export async function POST(req: Request) {
       colorTheme = "Indigo",
       targetAudience = "General Audience",
       previousHtml,
+      selectedSkill,
     } = body;
 
     if (!prompt) {
@@ -16,6 +20,41 @@ export async function POST(req: Request) {
         status: 400,
         headers: { "Content-Type": "application/json" },
       });
+    }
+
+    let skillContent = "";
+    if (selectedSkill) {
+      try {
+        // Check if this is a directory-based skill (e.g. ui-ux-pro-max with scripts/search.py)
+        const skillDir = path.join(process.cwd(), "skills", selectedSkill.replace(".md", ""));
+        const scriptPath = path.join(skillDir, "scripts", "search.py");
+
+        if (fs.existsSync(scriptPath)) {
+          // Build a search query from the request context
+          const searchQuery = `${prompt} ${tone} ${targetAudience}`.replace(/"/g, "").slice(0, 200);
+          try {
+            skillContent = execSync(
+              `python skills/ui-ux-pro-max/scripts/search.py "${searchQuery}" --design-system -f markdown`,
+              { cwd: process.cwd(), timeout: 15000, encoding: "utf-8" }
+            );
+            console.log("ui-ux-pro-max design system fetched successfully.");
+          } catch (scriptErr: any) {
+            console.warn("Python skill script failed, falling back to SKILL.md:", scriptErr.message);
+            const skillMd = path.join(skillDir, "SKILL.md");
+            if (fs.existsSync(skillMd)) {
+              skillContent = fs.readFileSync(skillMd, "utf-8");
+            }
+          }
+        } else {
+          // Plain .md skill file
+          const skillPath = path.join(process.cwd(), "skills", selectedSkill);
+          if (fs.existsSync(skillPath)) {
+            skillContent = fs.readFileSync(skillPath, "utf-8");
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load skill:", err);
+      }
     }
 
     const apiKey = process.env.COPYAI_GEMINI_API_KEY;
@@ -29,7 +68,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const systemInstruction = `You are a world-class frontend engineer and UI/UX expert.
+    let systemInstruction = `You are a world-class frontend engineer and UI/UX expert.
 You build premium, beautiful, modern, high-converting websites and landing pages.
 You support creating multiple HTML, CSS, and JS files per project to keep the code modular and clean if needed (e.g. index.html, about.html, style.css, script.js, etc).
 You must output your response in standard Markdown format:
@@ -77,6 +116,10 @@ Landing Page Guidelines:
 - Match the color scheme of "${colorTheme}" (e.g., if Indigo, Violet, Emerald, Rose, Amber, or Dark Theme).
 - Use Tailwind CSS colors and classes for everything.
 - Ensure the layout is 100% responsive, uses semantic tags, and has complete, high-quality copywriting (never use empty layout placeholders or lorem ipsum).`;
+
+    if (skillContent) {
+      systemInstruction += `\n\nCRITICAL UX/UI DESIGN & ENGINEERING RULES TO OBEY (From active skill guide):\n${skillContent}`;
+    }
 
     let userPrompt = "";
 
