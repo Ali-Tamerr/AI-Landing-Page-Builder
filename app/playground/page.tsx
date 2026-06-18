@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import { 
   ArrowLeft, Sparkles, Send, Loader2, MessageSquare, Plus, Trash2, Menu, X,
-  Copy, Download, Monitor, Tablet, Smartphone, Code, Eye, Info, ChevronDown, Settings, Globe
+  Copy, Download, Monitor, Tablet, Smartphone, Code, Eye, Info, ChevronDown, Settings, Globe, FileText
 } from "lucide-react"
 import { Button } from "@/components/ui/Button"
 import Link from "next/link"
@@ -188,6 +188,130 @@ function compileProjectPreview(files: ProjectFile[], activeFileName: string = "i
 `;
 
   return htmlContent + linkInterceptorScript;
+}
+
+function CodeHighlighter({ code, language }: { code: string; language: string }) {
+  const highlightCode = (codeText: string, lang: string) => {
+    if (lang === "html") {
+      const parts = [];
+      const regex = /(<!--[\s\S]*?-->)|(<script[\s\S]*?>[\s\S]*?<\/script>)|(<style[\s\S]*?>[\s\S]*?<\/style>)|(<[^>]+>)|([^<]+)/gi;
+      let match;
+      let i = 0;
+      
+      while ((match = regex.exec(codeText)) !== null) {
+        if (match[1]) {
+          parts.push(<span key={i++} className="text-slate-500 italic">{match[1]}</span>);
+        } else if (match[2]) {
+          parts.push(<span key={i++} className="text-amber-200">{match[2]}</span>);
+        } else if (match[3]) {
+          parts.push(<span key={i++} className="text-teal-200">{match[3]}</span>);
+        } else if (match[4]) {
+          const tag = match[4];
+          const tagRegex = /(<\/?)([a-zA-Z0-9:-]+)|(\s+([a-zA-Z0-9:-]+)\s*=\s*(["'])(.*?)\5)|(>)/g;
+          let tagMatch;
+          const tagParts = [];
+          let lastIdx = 0;
+          let k = 0;
+          
+          while ((tagMatch = tagRegex.exec(tag)) !== null) {
+            if (tagMatch.index > lastIdx) {
+              tagParts.push(tag.substring(lastIdx, tagMatch.index));
+            }
+            if (tagMatch[1]) {
+              tagParts.push(<span key={k++} className="text-slate-500">&lt;{tagMatch[1].slice(1)}</span>);
+              tagParts.push(<span key={k++} className="text-pink-400 font-bold">{tagMatch[2]}</span>);
+            } else if (tagMatch[3]) {
+              tagParts.push(" ");
+              tagParts.push(<span key={k++} className="text-sky-300">{tagMatch[4]}</span>);
+              tagParts.push(<span key={k++} className="text-slate-400">=</span>);
+              tagParts.push(<span key={k++} className="text-emerald-300">"{tagMatch[6]}"</span>);
+            } else if (tagMatch[7]) {
+              tagParts.push(<span key={k++} className="text-slate-500">&gt;</span>);
+            }
+            lastIdx = tagRegex.lastIndex;
+          }
+          if (lastIdx < tag.length) {
+            tagParts.push(tag.substring(lastIdx));
+          }
+          parts.push(<span key={i++}>{tagParts}</span>);
+        } else if (match[5]) {
+          parts.push(match[5]);
+        }
+      }
+      return parts;
+    }
+
+    if (lang === "css") {
+      const parts = [];
+      const cssRegex = /(\/\*[\s\S]*?\*\/)|([^{}\s]+)\s*({)|([^:]+)\s*:\s*([^;]+)\s*(;)|(})/g;
+      let match;
+      let i = 0;
+      
+      while ((match = cssRegex.exec(codeText)) !== null) {
+        if (match[1]) {
+          parts.push(<span key={i++} className="text-slate-500 italic">{match[1]}</span>);
+        } else if (match[2]) {
+          parts.push(<span key={i++} className="text-amber-300 font-semibold">{match[2]}</span>);
+          parts.push(<span key={i++} className="text-slate-400"> {match[3]}</span>);
+        } else if (match[4]) {
+          parts.push(<span key={i++} className="text-sky-300">  {match[4]}</span>);
+          parts.push(<span key={i++} className="text-slate-400">: </span>);
+          parts.push(<span key={i++} className="text-orange-300">{match[5]}</span>);
+          parts.push(<span key={i++} className="text-slate-400">;</span>);
+        } else if (match[7]) {
+          parts.push(<span key={i++} className="text-slate-400">{match[7]}</span>);
+        }
+      }
+      return parts.length > 0 ? parts : [codeText];
+    }
+
+    if (lang === "javascript") {
+      const parts = [];
+      const jsRegex = /(\/\/.*|\/\*[\s\S]*?\*\/)|(["'`].*?["'`])|(\b(const|let|var|function|return|import|export|class|default|if|else|for|while|new|async|await|try|catch|throw)\b)|(\b(console|window|document|process|Array|Object|String|Number|Boolean|Function|Symbol|Promise|Map|Set)\b)|(\b[a-zA-Z_][a-zA-Z0-9_]*(?=\()\.?\b)|(\b[0-9]+\b)|(\b[a-zA-Z_][a-zA-Z0-9_]*\b)|([{}()\[\];,])/g;
+      let match;
+      let i = 0;
+      let lastIndex = 0;
+
+      while ((match = jsRegex.exec(codeText)) !== null) {
+        if (match.index > lastIndex) {
+          parts.push(codeText.substring(lastIndex, match.index));
+        }
+
+        if (match[1]) {
+          parts.push(<span key={i++} className="text-slate-500 italic">{match[1]}</span>);
+        } else if (match[2]) {
+          parts.push(<span key={i++} className="text-emerald-300">{match[2]}</span>);
+        } else if (match[3]) {
+          parts.push(<span key={i++} className="text-pink-400 font-bold">{match[3]}</span>);
+        } else if (match[5]) {
+          parts.push(<span key={i++} className="text-cyan-400 font-semibold">{match[5]}</span>);
+        } else if (match[7]) {
+          parts.push(<span key={i++} className="text-amber-300">{match[7]}</span>);
+        } else if (match[8]) {
+          parts.push(<span key={i++} className="text-purple-400">{match[8]}</span>);
+        } else if (match[9]) {
+          parts.push(match[9]);
+        } else if (match[10]) {
+          parts.push(<span key={i++} className="text-slate-400">{match[10]}</span>);
+        }
+        
+        lastIndex = jsRegex.lastIndex;
+      }
+
+      if (lastIndex < codeText.length) {
+        parts.push(codeText.substring(lastIndex));
+      }
+      return parts;
+    }
+
+    return [codeText];
+  };
+
+  return (
+    <pre className="flex-1 overflow-auto p-5 text-left text-xs font-mono leading-relaxed select-text select-all bg-slate-950/80">
+      <code>{highlightCode(code, language)}</code>
+    </pre>
+  );
 }
 
 
@@ -1180,18 +1304,81 @@ function PlaygroundContent() {
                     />
                   </div>
                 ) : (
-                  /* Code view code panel */
-                  <div className="w-full h-full max-w-5xl bg-slate-900 border border-slate-950 rounded-2xl overflow-hidden shadow-lg flex flex-col">
-                    <div className="bg-slate-955 px-4 py-2 text-[10px] text-slate-400 font-mono flex items-center border-b border-slate-900 shrink-0">
-                      <span>{activeProject.activeFileName || "index.html"}</span>
-                      <span className="ml-auto text-brand-primary font-bold">Pure Tailwind HTML</span>
+                  /* Code view split container */
+                  <div className="w-full h-full max-w-5xl bg-slate-900 border border-slate-950 rounded-2xl overflow-hidden shadow-lg flex flex-row">
+                    
+                    {/* File Explorer Sidebar */}
+                    <div className="w-52 bg-slate-950 border-r border-slate-850 flex flex-col shrink-0 select-none">
+                      <div className="px-4 py-3 border-b border-slate-900 text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 border-slate-900/50">
+                        <Monitor className="w-3.5 h-3.5 text-brand-primary" />
+                        WORKSPACE FILES
+                      </div>
+                      <div className="flex-1 overflow-y-auto p-2 space-y-0.5 scrollbar-none">
+                        {((activeProject.files && activeProject.files.length > 0) 
+                          ? activeProject.files 
+                          : [{ name: "index.html", content: activeProject.landingPageHtml, language: "html" as const }]
+                        ).map(file => {
+                          const isActive = (activeProject.activeFileName || "index.html") === file.name;
+                          const isHtml = file.name.endsWith(".html");
+                          const isCss = file.name.endsWith(".css");
+                          const isJs = file.name.endsWith(".js") || file.name.endsWith(".javascript");
+                          
+                          return (
+                            <button
+                              key={file.name}
+                              onClick={() => {
+                                setProjects(prev => prev.map(p => {
+                                  if (p.id === activeProject.id) {
+                                    return {
+                                      ...p,
+                                      activeFileName: file.name,
+                                      landingPageHtml: compileProjectPreview(p.files || [], file.name)
+                                    }
+                                  }
+                                  return p;
+                                }))
+                              }}
+                              className={`w-full px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all ${
+                                isActive 
+                                  ? "bg-slate-900 text-brand-primary border-l-2 border-brand-primary rounded-l-none" 
+                                  : "text-slate-400 hover:text-slate-200 hover:bg-slate-900/40"
+                              }`}
+                            >
+                              {isHtml ? (
+                                <Globe className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                              ) : isCss ? (
+                                <Settings className="w-3.5 h-3.5 text-teal-400 shrink-0" />
+                              ) : isJs ? (
+                                <Code className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                              ) : (
+                                <FileText className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                              )}
+                              <span className="truncate">{file.name}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
-                    <pre className="flex-1 overflow-auto p-5 text-left text-xs font-mono text-emerald-400 leading-relaxed select-text select-all bg-slate-950/80">
-                      <code>{
-                        (activeProject.files && activeProject.files.find(f => f.name === (activeProject.activeFileName || "index.html"))?.content) 
-                        || activeProject.landingPageHtml
-                      }</code>
-                    </pre>
+
+                    {/* Code editor container */}
+                    <div className="flex-1 flex flex-col min-w-0">
+                      <div className="bg-slate-955 px-4 py-2 text-[10px] text-slate-400 font-mono flex items-center border-b border-slate-900 shrink-0">
+                        <span>{activeProject.activeFileName || "index.html"}</span>
+                        <span className="ml-auto text-brand-primary font-bold uppercase tracking-wider">
+                          {((activeProject.files && activeProject.files.find(f => f.name === (activeProject.activeFileName || "index.html"))?.language) || "html")}
+                        </span>
+                      </div>
+                      <CodeHighlighter 
+                        code={
+                          (activeProject.files && activeProject.files.find(f => f.name === (activeProject.activeFileName || "index.html"))?.content) 
+                          || activeProject.landingPageHtml
+                        } 
+                        language={
+                          ((activeProject.files && activeProject.files.find(f => f.name === (activeProject.activeFileName || "index.html"))?.language) || "html")
+                        } 
+                      />
+                    </div>
+
                   </div>
                 )
               ) : (
