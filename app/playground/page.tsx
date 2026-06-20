@@ -167,6 +167,29 @@ function TabButton({ active, onClick, icon, label }: TabButtonProps) {
   )
 }
 
+interface ViewportButtonProps {
+  active: boolean
+  onClick: () => void
+  icon: React.ReactNode
+  title: string
+}
+
+function ViewportButton({ active, onClick, icon, title }: ViewportButtonProps) {
+  return (
+    <button
+      onClick={onClick}
+      className={`p-1.5 rounded-lg transition-all ${
+        active 
+          ? "bg-white text-brand-primary shadow-3xs" 
+          : "text-gray-400 hover:text-gray-700"
+      }`}
+      title={title}
+    >
+      {icon}
+    </button>
+  )
+}
+
 function parseStreamingMarkdown(text: string) {
   const files: ProjectFile[] = [];
   
@@ -1264,39 +1287,24 @@ function PlaygroundContent() {
               {/* Responsive Width toggles */}
               <div className="flex items-center gap-4">
                 <div className="flex border border-brand-border rounded-xl p-0.5 bg-gray-50">
-                  <button
+                  <ViewportButton
+                    active={iframeWidth === "100%"}
                     onClick={() => setIframeWidth("100%")}
-                    className={`p-1.5 rounded-lg transition-all ${
-                      iframeWidth === "100%" 
-                        ? "bg-white text-brand-primary shadow-3xs" 
-                        : "text-gray-400 hover:text-gray-700"
-                    }`}
+                    icon={<Monitor className="w-4 h-4" />}
                     title="Desktop width"
-                  >
-                    <Monitor className="w-4 h-4" />
-                  </button>
-                  <button
+                  />
+                  <ViewportButton
+                    active={iframeWidth === "768px"}
                     onClick={() => setIframeWidth("768px")}
-                    className={`p-1.5 rounded-lg transition-all ${
-                      iframeWidth === "768px" 
-                        ? "bg-white text-brand-primary shadow-3xs" 
-                        : "text-gray-400 hover:text-gray-700"
-                    }`}
+                    icon={<Tablet className="w-4 h-4" />}
                     title="Tablet width"
-                  >
-                    <Tablet className="w-4 h-4" />
-                  </button>
-                  <button
+                  />
+                  <ViewportButton
+                    active={iframeWidth === "375px"}
                     onClick={() => setIframeWidth("375px")}
-                    className={`p-1.5 rounded-lg transition-all ${
-                      iframeWidth === "375px" 
-                        ? "bg-white text-brand-primary shadow-3xs" 
-                        : "text-gray-400 hover:text-gray-700"
-                    }`}
+                    icon={<Smartphone className="w-4 h-4" />}
                     title="Mobile width"
-                  >
-                    <Smartphone className="w-4 h-4" />
-                  </button>
+                  />
                 </div>
 
                 {activeProject && (
