@@ -190,6 +190,47 @@ function ViewportButton({ active, onClick, icon, title }: ViewportButtonProps) {
   )
 }
 
+interface FileTabButtonProps {
+  fileName: string
+  active: boolean
+  onClick: () => void
+  variant?: "light" | "dark"
+}
+
+function FileTabButton({ fileName, active, onClick, variant = "light" }: FileTabButtonProps) {
+  const isHtml = fileName.endsWith(".html")
+  const isCss = fileName.endsWith(".css")
+  const isJs = fileName.endsWith(".js") || fileName.endsWith(".javascript")
+  const isJson = fileName.endsWith(".json")
+
+  const renderIcon = () => {
+    if (isHtml) return <HtmlIcon className="w-3.5 h-3.5 shrink-0" />
+    if (isCss) return <CssIcon className="w-3.5 h-3.5 shrink-0" />
+    if (isJs) return <JsIcon className="w-3.5 h-3.5 rounded-xs shrink-0" />
+    if (isJson) return <FileJson className={`w-3.5 h-3.5 shrink-0 ${variant === "dark" ? "text-purple-400" : "text-purple-600"}`} />
+    return <FileText className={`w-3.5 h-3.5 shrink-0 ${variant === "dark" ? "text-slate-400" : "text-gray-400"}`} />
+  }
+
+  const className = variant === "dark"
+    ? `w-full px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all ${
+        active 
+          ? "bg-slate-900 text-brand-primary border-l-2 border-brand-primary rounded-l-none" 
+          : "text-slate-400 hover:text-slate-200 hover:bg-slate-900/40"
+      }`
+    : `px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all border shrink-0 ${
+        active 
+          ? "bg-brand-primary/10 border-brand-primary text-brand-primary font-bold shadow-3xs" 
+          : "bg-white border-brand-border text-gray-600 hover:text-gray-900"
+      }`
+
+  return (
+    <button onClick={onClick} className={className}>
+      {renderIcon()}
+      <span className="truncate">{fileName}</span>
+    </button>
+  )
+}
+
 function parseStreamingMarkdown(text: string) {
   const files: ProjectFile[] = [];
   
@@ -1516,14 +1557,13 @@ function PlaygroundContent() {
                           : [{ name: "index.html", content: activeProject.landingPageHtml, language: "html" as const }]
                         ).map(file => {
                           const isActive = (activeProject.activeFileName || "index.html") === file.name;
-                          const isHtml = file.name.endsWith(".html");
-                          const isCss = file.name.endsWith(".css");
-                          const isJs = file.name.endsWith(".js") || file.name.endsWith(".javascript");
-                          const isJson = file.name.endsWith(".json");
                           
                           return (
-                            <button
+                            <FileTabButton
                               key={file.name}
+                              fileName={file.name}
+                              active={isActive}
+                              variant="dark"
                               onClick={() => {
                                 setProjects(prev => prev.map(p => {
                                   if (p.id === activeProject.id) {
@@ -1536,25 +1576,7 @@ function PlaygroundContent() {
                                   return p;
                                 }))
                               }}
-                              className={`w-full px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all ${
-                                isActive 
-                                  ? "bg-slate-900 text-brand-primary border-l-2 border-brand-primary rounded-l-none" 
-                                  : "text-slate-400 hover:text-slate-200 hover:bg-slate-900/40"
-                              }`}
-                            >
-                              {isHtml ? (
-                                <HtmlIcon className="w-3.5 h-3.5 shrink-0" />
-                              ) : isCss ? (
-                                <CssIcon className="w-3.5 h-3.5 shrink-0" />
-                              ) : isJs ? (
-                                <JsIcon className="w-3.5 h-3.5 rounded-xs shrink-0" />
-                              ) : isJson ? (
-                                <FileJson className="w-3.5 h-3.5 text-purple-400 shrink-0" />
-                              ) : (
-                                <FileText className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                              )}
-                              <span className="truncate">{file.name}</span>
-                            </button>
+                            />
                           );
                         })}
                       </div>
