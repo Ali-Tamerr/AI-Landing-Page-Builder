@@ -2,7 +2,56 @@ import Link from "next/link"
 import { Sparkles, ArrowRight } from "lucide-react"
 import { Button } from "./Button"
 
+interface FooterColumnProps {
+  title: string
+  links: { label: string; href: string }[]
+}
+
+function FooterColumn({ title, links }: FooterColumnProps) {
+  return (
+    <div>
+      <h4 className="font-semibold text-gray-900 mb-4">{title}</h4>
+      <ul className="space-y-3 text-sm text-brand-muted">
+        {links.map((link) => (
+          <li key={link.label}>
+            <Link href={link.href} className="hover:text-brand-primary transition-colors">
+              {link.label}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
 export function Footer() {
+  const footerSections = [
+    {
+      title: "Product",
+      links: [
+        { label: "Features", href: "#" },
+        { label: "Pricing", href: "#" },
+        { label: "Use Cases", href: "#" },
+      ],
+    },
+    {
+      title: "Company",
+      links: [
+        { label: "About Us", href: "#" },
+        { label: "Careers", href: "#" },
+        { label: "Contact", href: "#" },
+      ],
+    },
+    {
+      title: "Resources",
+      links: [
+        { label: "Blog", href: "#" },
+        { label: "Help Center", href: "#" },
+        { label: "API Docs", href: "#" },
+      ],
+    },
+  ]
+
   return (
     <>
       {/* Dark CTA Banner */}
@@ -45,30 +94,9 @@ export function Footer() {
                 <span className="font-bold text-xl tracking-tight text-gray-900">CopyAI<span className="text-brand-primary">.</span></span>
               </Link>
             </div>
-            <div>
-              <h4 className="font-semibold text-gray-900 mb-4">Product</h4>
-              <ul className="space-y-3 text-sm text-brand-muted">
-                <li><Link href="#" className="hover:text-brand-primary transition-colors">Features</Link></li>
-                <li><Link href="#" className="hover:text-brand-primary transition-colors">Pricing</Link></li>
-                <li><Link href="#" className="hover:text-brand-primary transition-colors">Use Cases</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold text-gray-900 mb-4">Company</h4>
-              <ul className="space-y-3 text-sm text-brand-muted">
-                <li><Link href="#" className="hover:text-brand-primary transition-colors">About Us</Link></li>
-                <li><Link href="#" className="hover:text-brand-primary transition-colors">Careers</Link></li>
-                <li><Link href="#" className="hover:text-brand-primary transition-colors">Contact</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold text-gray-900 mb-4">Resources</h4>
-              <ul className="space-y-3 text-sm text-brand-muted">
-                <li><Link href="#" className="hover:text-brand-primary transition-colors">Blog</Link></li>
-                <li><Link href="#" className="hover:text-brand-primary transition-colors">Help Center</Link></li>
-                <li><Link href="#" className="hover:text-brand-primary transition-colors">API Docs</Link></li>
-              </ul>
-            </div>
+            {footerSections.map((section) => (
+              <FooterColumn key={section.title} title={section.title} links={section.links} />
+            ))}
           </div>
           <div className="pt-8 border-t border-brand-border flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-brand-muted text-center md:text-left">
             <p>© {new Date().getFullYear()} CopyAI Inc. All rights reserved.</p>
