@@ -117,6 +117,56 @@ function BuildProgressIndicator({ step }: { step: number }) {
   )
 }
 
+interface FormFieldSelectProps {
+  label: string
+  value: string
+  onChange: (val: string) => void
+  options: { label: string; value: string }[]
+  className?: string
+}
+
+function FormFieldSelect({ label, value, onChange, options, className = "" }: FormFieldSelectProps) {
+  return (
+    <div>
+      <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1.5">{label}</label>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className={`w-full h-9 border border-brand-border rounded-lg bg-white px-2 focus:ring-2 focus:ring-brand-primary/20 ${className}`}
+      >
+        {options.map((opt) => (
+          <option key={opt.value} value={opt.value}>
+            {opt.label}
+          </option>
+        ))}
+      </select>
+    </div>
+  )
+}
+
+interface TabButtonProps {
+  active: boolean
+  onClick: () => void
+  icon: React.ReactNode
+  label: string
+}
+
+function TabButton({ active, onClick, icon, label }: TabButtonProps) {
+  return (
+    <button
+      onClick={onClick}
+      className={`px-3 py-1.5 text-[10px] font-bold rounded-lg flex items-center gap-1.5 transition-all ${
+        active 
+          ? "bg-white text-gray-900 shadow-3xs" 
+          : "text-gray-500 hover:text-gray-900"
+      }`}
+    >
+      {icon}
+      {label}
+    </button>
+  )
+}
+
 function parseStreamingMarkdown(text: string) {
   const files: ProjectFile[] = [];
   
@@ -1050,26 +1100,18 @@ function PlaygroundContent() {
                 >
                   <div className="p-4 space-y-4 text-xs">
                     <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1.5">Tone of Voice</label>
-                        <select 
-                          value={tone}
-                          onChange={(e) => setTone(e.target.value)}
-                          className="w-full h-9 border border-brand-border rounded-lg bg-white px-2 focus:ring-2 focus:ring-brand-primary/20"
-                        >
-                          {TONES.map(t => <option key={t} value={t}>{t}</option>)}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1.5">Color Palette</label>
-                        <select 
-                          value={colorTheme}
-                          onChange={(e) => setColorTheme(e.target.value)}
-                          className="w-full h-9 border border-brand-border rounded-lg bg-white px-2 focus:ring-2 focus:ring-brand-primary/20"
-                        >
-                          {COLOR_THEMES.map(c => <option key={c.value} value={c.value}>{c.name}</option>)}
-                        </select>
-                      </div>
+                      <FormFieldSelect
+                        label="Tone of Voice"
+                        value={tone}
+                        onChange={setTone}
+                        options={TONES.map(t => ({ label: t, value: t }))}
+                      />
+                      <FormFieldSelect
+                        label="Color Palette"
+                        value={colorTheme}
+                        onChange={setColorTheme}
+                        options={COLOR_THEMES.map(c => ({ label: c.name, value: c.value }))}
+                      />
                     </div>
                     <div>
                       <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1.5">Target Audience</label>
@@ -1081,20 +1123,17 @@ function PlaygroundContent() {
                         className="w-full h-9 border border-brand-border rounded-lg bg-white px-3 focus:ring-2 focus:ring-brand-primary/20"
                       />
                     </div>
-                    <div>
-                      <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1.5">AI Generation Skill (Guidelines)</label>
-                      <select 
-                        value={selectedSkill}
-                        onChange={(e) => setSelectedSkill(e.target.value)}
-                        className="w-full h-9 border border-brand-border rounded-lg bg-white px-2 focus:ring-2 focus:ring-brand-primary/20 font-medium text-gray-700"
-                      >
-                        {skills.length === 0 ? (
-                          <option value="frontend-design.md">frontend-design.md</option>
-                        ) : (
-                          skills.map(s => <option key={s.name} value={s.name}>{s.label}</option>)
-                        )}
-                      </select>
-                    </div>
+                    <FormFieldSelect
+                      label="AI Generation Skill (Guidelines)"
+                      value={selectedSkill}
+                      onChange={setSelectedSkill}
+                      className="font-medium text-gray-700"
+                      options={
+                        skills.length === 0 
+                          ? [{ label: "frontend-design.md", value: "frontend-design.md" }]
+                          : skills.map(s => ({ label: s.label, value: s.name }))
+                      }
+                    />
                   </div>
                 </motion.div>
               )}
@@ -1270,28 +1309,18 @@ function PlaygroundContent() {
               {/* Mode switch (Live Preview / Code view) */}
               <div className="flex items-center gap-3">
                 <div className="flex border border-brand-border rounded-xl p-0.5 bg-gray-50">
-                  <button
+                  <TabButton
+                    active={activeTab === "preview"}
                     onClick={() => setActiveTab("preview")}
-                    className={`px-3 py-1.5 text-[10px] font-bold rounded-lg flex items-center gap-1.5 transition-all ${
-                      activeTab === "preview" 
-                        ? "bg-white text-gray-900 shadow-3xs" 
-                        : "text-gray-500 hover:text-gray-900"
-                    }`}
-                  >
-                    <Eye className="w-3.5 h-3.5" />
-                    Live Preview
-                  </button>
-                  <button
+                    icon={<Eye className="w-3.5 h-3.5" />}
+                    label="Live Preview"
+                  />
+                  <TabButton
+                    active={activeTab === "code"}
                     onClick={() => setActiveTab("code")}
-                    className={`px-3 py-1.5 text-[10px] font-bold rounded-lg flex items-center gap-1.5 transition-all ${
-                      activeTab === "code" 
-                        ? "bg-white text-gray-900 shadow-3xs" 
-                        : "text-gray-500 hover:text-gray-900"
-                    }`}
-                  >
-                    <Code className="w-3.5 h-3.5" />
-                    Code View
-                  </button>
+                    icon={<Code className="w-3.5 h-3.5" />}
+                    label="Code View"
+                  />
                 </div>
 
                 {activeProject && (
