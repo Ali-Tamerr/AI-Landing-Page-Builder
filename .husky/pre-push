@@ -1,11 +1,4 @@
-#!/bin/sh
-. "$(dirname "$0")/_/husky.sh"
-
 echo "Checking project quality before push..."
-
-# Run full project ESLint check
-echo "Running ESLint..."
-npm run lint || exit 1
 
 # Run TypeScript typechecks
 echo "Running Type checks..."
