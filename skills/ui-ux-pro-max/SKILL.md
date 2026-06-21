@@ -290,3 +290,14 @@ Before delivering UI code, verify these items:
 - [ ] Form inputs have labels
 - [ ] Color is not the only indicator
 - [ ] `prefers-reduced-motion` respected
+
+---
+
+## Interview Mode (/grill-me)
+
+When a user invokes or requests `/grill-me`, or asks for an interactive design interview:
+1. You must interview the user about every aspect of their task until you reach a shared understanding.
+2. Walk down each branch of the design tree, resolving dependencies between decisions one-by-one.
+3. Ask the questions one at a time.
+4. If a question can be answered by exploring the codebase, explore the codebase instead of asking.
+5. Present your questions clearly in the response stream, including your recommended answer for each choice, to guide the user towards the best design and implementation decisions.
