@@ -5,10 +5,10 @@ import Link from "next/link"
 import { Button } from "./Button"
 import { LogOut } from "lucide-react"
 import { auth } from "@/lib/firebase"
-import { onAuthStateChanged, signOut } from "firebase/auth"
+import { onAuthStateChanged, signOut, User } from "firebase/auth"
 
 export function Navbar() {
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
