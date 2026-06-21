@@ -1,17 +1,19 @@
 "use client"
+/* eslint-disable react-hooks/purity */
 
 import { useState, useEffect, Suspense, useRef } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import { 
   ArrowLeft, Sparkles, Send, Loader2, MessageSquare, Plus, Trash2, Menu, X,
-  Copy, Download, Monitor, Tablet, Smartphone, Code, Eye, Info, ChevronDown, Settings, Globe, FileText,
+  Download, Monitor, Tablet, Smartphone, Code, Eye, Info, Settings, Globe, FileText,
   FileJson, PanelRightOpen, PanelRightClose
 } from "lucide-react"
 import { Button } from "@/components/ui/Button"
 import Link from "next/link"
+import Image from "next/image"
 import { auth, db } from "@/lib/firebase"
-import { onAuthStateChanged, signOut } from "firebase/auth"
+import { onAuthStateChanged, signOut, User } from "firebase/auth"
 import { collection, doc, setDoc, deleteDoc, getDocs, query, orderBy } from "firebase/firestore"
 import ReactMarkdown from "react-markdown"
 
@@ -379,7 +381,7 @@ function CodeHighlighter({ code, language, onChange }: { code: string; language:
               tagParts.push(" ");
               tagParts.push(<span key={k++} className="text-sky-300">{tagMatch[4]}</span>);
               tagParts.push(<span key={k++} className="text-slate-400">=</span>);
-              tagParts.push(<span key={k++} className="text-emerald-300">"{tagMatch[6]}"</span>);
+              tagParts.push(<span key={k++} className="text-emerald-300">&quot;{tagMatch[6]}&quot;</span>);
             } else if (tagMatch[7]) {
               tagParts.push(<span key={k++} className="text-slate-500">&gt;</span>);
             }
@@ -523,7 +525,7 @@ function PlaygroundContent() {
   const initialPrompt = searchParams.get("prompt") || ""
   
   // Auth state
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<User | null>(null)
   const [authLoading, setAuthLoading] = useState(true)
 
   // Projects state
@@ -557,6 +559,7 @@ function PlaygroundContent() {
   // Lifted build step status and minimize state timers
   useEffect(() => {
     if (!isGenerating) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setBuildStep(0)
       return
     }
@@ -633,7 +636,7 @@ function PlaygroundContent() {
           } else if (parsed.length > 0) {
             setCurrentProjectId(parsed[0].id)
           }
-        } catch (e) {}
+        } catch {}
       }
     }
 
@@ -665,9 +668,11 @@ function PlaygroundContent() {
   useEffect(() => {
     if (initialPrompt && user && !hasRunInitialPrompt.current && projects.length === 0) {
       hasRunInitialPrompt.current = true
+      // eslint-disable-next-line react-hooks/immutability
       handleSendMessage(undefined, initialPrompt)
       router.replace("/playground")
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialPrompt, user, projects.length])
 
   // Scroll chat to bottom
@@ -740,7 +745,7 @@ function PlaygroundContent() {
     try {
       const projectDocRef = doc(db, "users", user.uid, "projects", id)
       await deleteDoc(projectDocRef)
-    } catch (err) {}
+    } catch {}
   }
 
   // Unified Handler for prompt generation and chat editing
@@ -834,7 +839,7 @@ function PlaygroundContent() {
           if (errData && errData.error) {
             errMsg = errData.error;
           }
-        } catch (_) {}
+        } catch {}
         throw new Error(errMsg);
       }
 
@@ -860,6 +865,7 @@ function PlaygroundContent() {
         const parsed = parseStreamingMarkdown(accumulatedText)
         currentThinking = parsed.thinking
         if (parsed.files && parsed.files.length > 0) {
+          // eslint-disable-next-line react-hooks/immutability
           currentFiles = parsed.files
           // Auto-minimize the loader overlay so the user sees live HTML rendering
           if (!hasAutoMinimized) {
@@ -940,8 +946,8 @@ function PlaygroundContent() {
         })
       }
 
-    } catch (err: any) {
-      const errMsg = err.message || "An error occurred while generating code."
+    } catch (err: unknown) {
+      const errMsg = err instanceof Error ? err.message : "An error occurred while generating code."
       setError(errMsg)
 
       const errorAiMsg: ChatMessage = {
@@ -1073,10 +1079,12 @@ function PlaygroundContent() {
             <div className="p-4 border-t border-brand-border bg-white shrink-0">
               <div className="flex items-center gap-3 mb-3 px-1">
                 {user?.photoURL ? (
-                  <img 
+                  <Image 
                     src={user.photoURL} 
                     alt={user.displayName || "User Profile"} 
-                    referrerPolicy="no-referrer"
+                    width={32}
+                    height={32}
+                    unoptimized
                     className="w-8 h-8 rounded-full object-cover shrink-0 border border-brand-border"
                   />
                 ) : (
@@ -1096,7 +1104,7 @@ function PlaygroundContent() {
                   try {
                     await signOut(auth);
                     router.push("/");
-                  } catch (err) {}
+                  } catch {}
                 }} 
                 variant="outline" 
                 className="w-full justify-center gap-2 border-red-100 text-red-500 hover:bg-red-50 hover:border-red-200 h-10 rounded-xl text-xs font-semibold transition-colors"
@@ -1229,15 +1237,15 @@ function PlaygroundContent() {
                         ) : (
                           <ReactMarkdown
                             components={{
-                              h1: ({ node, ...props }) => <h1 className="text-base font-extrabold mt-3 mb-1 text-gray-900" {...props} />,
-                              h2: ({ node, ...props }) => <h2 className="text-sm font-extrabold mt-3 mb-1 text-gray-900" {...props} />,
-                              h3: ({ node, ...props }) => <h3 className="text-xs font-bold mt-2 mb-1 text-gray-900" {...props} />,
-                              p: ({ node, ...props }) => <p className="mb-2 last:mb-0 text-gray-700 leading-relaxed" {...props} />,
-                              ul: ({ node, ...props }) => <ul className="list-disc pl-4 mb-2 space-y-0.5 text-gray-700" {...props} />,
-                              ol: ({ node, ...props }) => <ol className="list-decimal pl-4 mb-2 space-y-0.5 text-gray-700" {...props} />,
-                              li: ({ node, ...props }) => <li className="text-gray-700" {...props} />,
-                              strong: ({ node, ...props }) => <strong className="font-extrabold text-gray-950" {...props} />,
-                              code: ({ node, ...props }) => <code className="bg-gray-100 rounded px-1.5 py-0.5 font-mono text-[11px] text-indigo-600 font-semibold" {...props} />
+                              h1: ({ ...props }) => <h1 className="text-base font-extrabold mt-3 mb-1 text-gray-900" {...props} />,
+                              h2: ({ ...props }) => <h2 className="text-sm font-extrabold mt-3 mb-1 text-gray-900" {...props} />,
+                              h3: ({ ...props }) => <h3 className="text-xs font-bold mt-2 mb-1 text-gray-900" {...props} />,
+                              p: ({ ...props }) => <p className="mb-2 last:mb-0 text-gray-700 leading-relaxed" {...props} />,
+                              ul: ({ ...props }) => <ul className="list-disc pl-4 mb-2 space-y-0.5 text-gray-700" {...props} />,
+                              ol: ({ ...props }) => <ol className="list-decimal pl-4 mb-2 space-y-0.5 text-gray-700" {...props} />,
+                              li: ({ ...props }) => <li className="text-gray-700" {...props} />,
+                              strong: ({ ...props }) => <strong className="font-extrabold text-gray-950" {...props} />,
+                              code: ({ ...props }) => <code className="bg-gray-100 rounded px-1.5 py-0.5 font-mono text-[11px] text-indigo-600 font-semibold" {...props} />
                             }}
                           >
                             {msg.text}

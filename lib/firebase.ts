@@ -18,8 +18,8 @@ const app = isBrowser
   ? (getApps().length > 0 ? getApp() : initializeApp(firebaseConfig))
   : null;
 
-const auth = (app ? getAuth(app) : null) as unknown as Auth;
-const db = (app ? getFirestore(app) : null) as unknown as Firestore;
+const auth = (app ? getAuth(app) : null) as Auth;
+const db = (app ? getFirestore(app) : null) as Firestore;
 
 export { auth, db };
 

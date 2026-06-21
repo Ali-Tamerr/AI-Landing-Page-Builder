@@ -5,13 +5,19 @@ import nextTs from "eslint-config-next/typescript";
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
-  // Override default ignores of eslint-config-next.
   globalIgnores([
-    // Default ignores of eslint-config-next:
+    // Build outputs
     ".next/**",
     "out/**",
     "build/**",
+    ".cloudflare/**",
+    // Generated files
     "next-env.d.ts",
+    "cloudflare-env.d.ts",
+    // Dependencies — must be explicit since we overrode Next's defaults
+    "node_modules/**",
+    // Static assets
+    "public/**",
   ]),
 ]);
 

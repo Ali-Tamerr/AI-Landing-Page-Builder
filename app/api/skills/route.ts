@@ -32,7 +32,7 @@ export async function GET() {
     }
 
     return NextResponse.json({ skills });
-  } catch (err) {
+  } catch {
     return NextResponse.json({ error: "Failed to list skills" }, { status: 500 });
   }
 }

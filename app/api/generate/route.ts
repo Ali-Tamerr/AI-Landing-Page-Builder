@@ -3,6 +3,12 @@ import fs from "fs";
 import path from "path";
 import { execSync } from "child_process";
 
+interface FileEntry {
+  name: string;
+  language: string;
+  content: string;
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -38,8 +44,9 @@ export async function POST(req: Request) {
               { cwd: process.cwd(), timeout: 15000, encoding: "utf-8" }
             );
             console.log("ui-ux-pro-max design system fetched successfully.");
-          } catch (scriptErr: any) {
-            console.warn("Python skill script failed, falling back to SKILL.md:", scriptErr.message);
+          } catch (scriptErr: unknown) {
+            const msg = scriptErr instanceof Error ? scriptErr.message : String(scriptErr);
+            console.warn("Python skill script failed, falling back to SKILL.md:", msg);
             const skillMd = path.join(skillDir, "SKILL.md");
             if (fs.existsSync(skillMd)) {
               skillContent = fs.readFileSync(skillMd, "utf-8");
@@ -126,7 +133,7 @@ Landing Page Guidelines:
     if (body.files && body.files.length > 0) {
       userPrompt = `You are refining an existing web project based on a new user instruction.
 Current Project Files:
-${body.files.map((f: any) => `[File: ${f.name}]\n\`\`\`${f.language}\n${f.content}\n\`\`\``).join("\n\n")}
+${body.files.map((f: FileEntry) => `[File: ${f.name}]\n\`\`\`${f.language}\n${f.content}\n\`\`\``).join("\n\n")}
 
 The user's instruction for this iteration is: "${prompt}"
 Tone of Voice: "${tone}"
@@ -193,10 +200,11 @@ Make the design extremely modern, using grids, custom flex layouts, nice gradien
           );
           break;
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
         console.warn(
           `Model ${modelName} failed to initiate stream. Error:`,
-          err.message || err,
+          msg,
         );
         lastError = err;
       }
@@ -214,7 +222,7 @@ Make the design extremely modern, using grids, custom flex layouts, nice gradien
             const text = chunk.text();
             controller.enqueue(encoder.encode(text));
           }
-        } catch (e: any) {
+        } catch (e: unknown) {
           console.error("Stream generation error:", e);
           controller.error(e);
         } finally {
@@ -230,12 +238,11 @@ Make the design extremely modern, using grids, custom flex layouts, nice gradien
         Connection: "keep-alive",
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Generate Website Stream API error:", error);
+    const message = error instanceof Error ? error.message : "Failed to generate website code";
     return new Response(
-      JSON.stringify({
-        error: error.message || "Failed to generate website code",
-      }),
+      JSON.stringify({ error: message }),
       {
         status: 500,
         headers: { "Content-Type": "application/json" },
