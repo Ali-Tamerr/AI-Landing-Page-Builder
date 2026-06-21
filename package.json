@@ -39,7 +39,7 @@
     "lint-staged": "^17.0.8",
     "tailwindcss": "^4.3.0",
     "typescript": "^5",
-    "wrangler": "^4.98.0"
+    "wrangler": "^4.103.0"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": "eslint --fix"
