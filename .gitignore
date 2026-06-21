@@ -50,3 +50,4 @@ next-env.d.ts
 
 !.env.example
 modern_cicd_pipeline_for_front_end_projects.json
+AI chats/
