@@ -11,6 +11,7 @@ import {
 } from "lucide-react"
 import { Button } from "@/components/ui/Button"
 import Link from "next/link"
+import Image from "next/image"
 import { auth, db } from "@/lib/firebase"
 import { onAuthStateChanged, signOut, User } from "firebase/auth"
 import { collection, doc, setDoc, deleteDoc, getDocs, query, orderBy } from "firebase/firestore"
@@ -1078,10 +1079,12 @@ function PlaygroundContent() {
             <div className="p-4 border-t border-brand-border bg-white shrink-0">
               <div className="flex items-center gap-3 mb-3 px-1">
                 {user?.photoURL ? (
-                  <img 
+                  <Image 
                     src={user.photoURL} 
                     alt={user.displayName || "User Profile"} 
-                    referrerPolicy="no-referrer"
+                    width={32}
+                    height={32}
+                    unoptimized
                     className="w-8 h-8 rounded-full object-cover shrink-0 border border-brand-border"
                   />
                 ) : (
