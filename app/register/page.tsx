@@ -8,6 +8,29 @@ import { Button } from "@/components/ui/Button";
 import { auth } from "@/lib/firebase";
 import { createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 
+interface FormInputProps {
+  type: string
+  placeholder: string
+  value: string
+  onChange: (val: string) => void
+  required?: boolean
+}
+
+function FormInput({ type, placeholder, value, onChange, required = false }: FormInputProps) {
+  return (
+    <div>
+      <input
+        type={type}
+        required={required}
+        placeholder={placeholder}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:bg-white/10 transition-all"
+      />
+    </div>
+  )
+}
+
 export default function RegisterPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -90,36 +113,27 @@ export default function RegisterPage() {
         )}
 
         <form className="space-y-5" onSubmit={handleRegister}>
-          <div>
-            <input 
-              type="text" 
-              required
-              placeholder="Name"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:bg-white/10 transition-all"
-            />
-          </div>
-          <div>
-            <input 
-              type="email" 
-              required
-              placeholder="Email"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:bg-white/10 transition-all"
-            />
-          </div>
-          <div>
-            <input 
-              type="password" 
-              required
-              placeholder="Password"
-              value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:bg-white/10 transition-all"
-            />
-          </div>
+          <FormInput
+            type="text"
+            required
+            placeholder="Name"
+            value={formData.name}
+            onChange={(val) => setFormData({ ...formData, name: val })}
+          />
+          <FormInput
+            type="email"
+            required
+            placeholder="Email"
+            value={formData.email}
+            onChange={(val) => setFormData({ ...formData, email: val })}
+          />
+          <FormInput
+            type="password"
+            required
+            placeholder="Password"
+            value={formData.password}
+            onChange={(val) => setFormData({ ...formData, password: val })}
+          />
           
           <Button 
             type="submit" 
