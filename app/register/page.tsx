@@ -59,9 +59,10 @@ export default function RegisterPage() {
       });
 
       router.push("/playground");
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Registration error:", err);
-      setError(err.message || "Failed to create account. Please try again.");
+      const errMsg = err instanceof Error ? err.message : "Failed to create account. Please try again.";
+      setError(errMsg);
     } finally {
       setLoading(false);
     }
@@ -74,9 +75,10 @@ export default function RegisterPage() {
     try {
       await signInWithPopup(auth, provider);
       router.push("/playground");
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Google Sign-In error:", err);
-      setError(err.message || "Failed to sign in with Google.");
+      const errMsg = err instanceof Error ? err.message : "Failed to sign in with Google.";
+      setError(errMsg);
     } finally {
       setLoading(false);
     }

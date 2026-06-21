@@ -1,0 +1,18 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+echo "Checking project quality before push..."
+
+# Run full project ESLint check
+echo "Running ESLint..."
+npm run lint || exit 1
+
+# Run TypeScript typechecks
+echo "Running Type checks..."
+npx tsc --noEmit || exit 1
+
+# Verify Next.js builds successfully
+echo "Verifying build..."
+npm run build || exit 1
+
+echo "Pre-push validation completed successfully! Pushing upstream..."
