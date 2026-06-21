@@ -25,7 +25,7 @@ export default function LoginPage() {
     try {
       await signInWithEmailAndPassword(auth, formData.email, formData.password);
       router.push("/playground");
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Login error:", err);
       setError("Invalid email or password. Please try again.");
     } finally {
@@ -40,9 +40,9 @@ export default function LoginPage() {
     try {
       await signInWithPopup(auth, provider);
       router.push("/playground");
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Google Sign-In error:", err);
-      setError(err.message || "Failed to sign in with Google.");
+      setError(err instanceof Error ? err.message : "Failed to sign in with Google.");
     } finally {
       setLoading(false);
     }

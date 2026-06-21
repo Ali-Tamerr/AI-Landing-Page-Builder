@@ -21,10 +21,11 @@ export async function POST(req: Request) {
       title: "Generated Campaign Visual",
       photographer: "AI"
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Image Generate API error:", error);
+    const message = error instanceof Error ? error.message : "Failed to generate image";
     return NextResponse.json(
-      { error: error.message || "Failed to generate image" },
+      { error: message },
       { status: 500 }
     );
   }
