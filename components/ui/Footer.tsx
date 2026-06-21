@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { Sparkles, ArrowRight } from "lucide-react"
+import { ArrowRight } from "lucide-react"
 import { Button } from "./Button"
 
 interface FooterColumnProps {

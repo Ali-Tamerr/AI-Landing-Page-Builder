@@ -5,8 +5,8 @@ import { useSearchParams, useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import { 
   ArrowLeft, Sparkles, Send, Loader2, MessageSquare, Plus, Trash2, Menu, X,
-  Copy, Download, Monitor, Tablet, Smartphone, Code, Eye, Info, ChevronDown, ChevronLeft, ChevronRight, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen, Settings, Globe, FileText,
-  FileCode, Paintbrush, Braces, FileJson
+  Copy, Download, Monitor, Tablet, Smartphone, Code, Eye, Info, ChevronDown, Settings, Globe, FileText,
+  FileJson, PanelRightOpen, PanelRightClose
 } from "lucide-react"
 import { Button } from "@/components/ui/Button"
 import Link from "next/link"

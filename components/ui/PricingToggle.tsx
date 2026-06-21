@@ -3,7 +3,6 @@
 import { useState } from "react"
 import { motion } from "framer-motion"
 import { Check, ArrowRight } from "lucide-react"
-import { Button } from "./Button"
 import Link from "next/link"
 
 export function PricingToggle() {
