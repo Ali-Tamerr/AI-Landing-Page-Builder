@@ -49,3 +49,4 @@ next-env.d.ts
 !.dev.vars.example
 
 !.env.example
+modern_cicd_pipeline_for_front_end_projects.json
