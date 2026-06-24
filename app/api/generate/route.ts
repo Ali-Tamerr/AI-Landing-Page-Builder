@@ -1,13 +1,45 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import fs from "fs";
 import path from "path";
-import { execSync } from "child_process";
+import { execFileSync } from "child_process";
 
 interface FileEntry {
   name: string;
   language: string;
   content: string;
 }
+
+interface ChatMessageEntry {
+  sender: "user" | "assistant";
+  text: string;
+}
+
+const formatChatHistory = (messages: ChatMessageEntry[] = []) => {
+  return messages
+    .slice(-12)
+    .map(
+      (message) =>
+        `${message.sender === "user" ? "User" : "Builder AI"}: ${message.text}`,
+    )
+    .join("\n\n");
+};
+
+const readSkillMarkdownFallback = (skillDir: string, selectedSkill: string) => {
+  const candidates = [
+    path.join(skillDir, "SKILL.md"),
+    path.join(
+      process.cwd(),
+      "skills",
+      `${selectedSkill.replace(".md", "")}.md`,
+    ),
+    path.join(process.cwd(), "skills", selectedSkill),
+  ];
+
+  return candidates
+    .filter((candidate) => fs.existsSync(candidate))
+    .map((candidate) => fs.readFileSync(candidate, "utf-8"))
+    .join("\n\n");
+};
 
 export async function POST(req: Request) {
   try {
@@ -19,6 +51,8 @@ export async function POST(req: Request) {
       targetAudience = "General Audience",
       previousHtml,
       selectedSkill,
+      generationMode = "build",
+      chatHistory = [],
     } = body;
 
     if (!prompt) {
@@ -28,36 +62,43 @@ export async function POST(req: Request) {
       });
     }
 
+    const conversationContext = formatChatHistory(
+      chatHistory as ChatMessageEntry[],
+    );
+
     let skillContent = "";
     if (selectedSkill) {
       try {
         // Check if this is a directory-based skill (e.g. ui-ux-pro-max with scripts/search.py)
-        const skillDir = path.join(process.cwd(), "skills", selectedSkill.replace(".md", ""));
+        const normalizedSkill = selectedSkill.replace(".md", "");
+        const skillDir = path.join(process.cwd(), "skills", normalizedSkill);
         const scriptPath = path.join(skillDir, "scripts", "search.py");
 
         if (fs.existsSync(scriptPath)) {
-          // Build a search query from the request context
-          const searchQuery = `${prompt} ${tone} ${targetAudience}`.replace(/"/g, "").slice(0, 200);
+          const searchQuery =
+            `${prompt} ${conversationContext} ${tone} ${targetAudience}`
+              .replace(/\s+/g, " ")
+              .slice(0, 500);
           try {
-            skillContent = execSync(
-              `python skills/ui-ux-pro-max/scripts/search.py "${searchQuery}" --design-system -f markdown`,
-              { cwd: process.cwd(), timeout: 15000, encoding: "utf-8" }
+            skillContent = execFileSync(
+              "python",
+              [scriptPath, searchQuery, "--design-system", "-f", "markdown"],
+              { cwd: process.cwd(), timeout: 15000, encoding: "utf-8" },
             );
             console.log("ui-ux-pro-max design system fetched successfully.");
           } catch (scriptErr: unknown) {
-            const msg = scriptErr instanceof Error ? scriptErr.message : String(scriptErr);
-            console.warn("Python skill script failed, falling back to SKILL.md:", msg);
-            const skillMd = path.join(skillDir, "SKILL.md");
-            if (fs.existsSync(skillMd)) {
-              skillContent = fs.readFileSync(skillMd, "utf-8");
-            }
+            const msg =
+              scriptErr instanceof Error
+                ? scriptErr.message
+                : String(scriptErr);
+            console.warn(
+              "Python skill script failed, falling back to markdown rules:",
+              msg,
+            );
+            skillContent = readSkillMarkdownFallback(skillDir, selectedSkill);
           }
         } else {
-          // Plain .md skill file
-          const skillPath = path.join(process.cwd(), "skills", selectedSkill);
-          if (fs.existsSync(skillPath)) {
-            skillContent = fs.readFileSync(skillPath, "utf-8");
-          }
+          skillContent = readSkillMarkdownFallback(skillDir, selectedSkill);
         }
       } catch (err) {
         console.error("Failed to load skill:", err);
@@ -158,9 +199,37 @@ Landing Page Guidelines:
       systemInstruction += `\n\nCRITICAL UX/UI DESIGN & ENGINEERING RULES TO OBEY (From active skill guide):\n${skillContent}`;
     }
 
+    if (generationMode === "interview") {
+      const grillMePath = path.join(process.cwd(), "skills", "grill-me.md");
+      if (fs.existsSync(grillMePath)) {
+        systemInstruction += `\n\nACTIVE INTERVIEW SKILL RULES (grill-me):\n${fs.readFileSync(grillMePath, "utf-8")}`;
+      }
+    }
+
     let userPrompt = "";
 
-    if (body.files && body.files.length > 0) {
+    if (generationMode === "interview") {
+      systemInstruction += `
+
+ACTIVE MODE: GRILL-ME INTERVIEW.
+You are NOT allowed to generate website files yet.
+Do NOT output [File: ...] blocks, HTML, CSS, JavaScript, or implementation code.
+Ask exactly ONE next question that resolves the most important missing requirement before building.
+Use the design tree order: product goal, exact audience, brand personality, page sections/content flow, visual theme, interactions.
+Each question must include 3-4 concrete options and one recommendation derived from the active UI/UX skill rules.
+Return only a short lead-in sentence and one \`\`\`question JSON block.`;
+
+      userPrompt = `Interview the user before building a landing page.
+Original/latest user input: "${prompt}"
+Tone of Voice: "${tone}"
+Color Theme Style: "${colorTheme}"
+Target Audience: "${targetAudience}"
+
+Conversation so far:
+${conversationContext || "No previous interview answers yet."}
+
+Ask the single next best question. Do not build yet.`;
+    } else if (body.files && body.files.length > 0) {
       userPrompt = `You are refining an existing web project based on a new user instruction.
 Current Project Files:
 ${body.files.map((f: FileEntry) => `[File: ${f.name}]\n\`\`\`${f.language}\n${f.content}\n\`\`\``).join("\n\n")}
@@ -185,7 +254,7 @@ Tone of Voice: "${tone}"
 Color Theme Style: "${colorTheme}"
 Target Audience: "${targetAudience}"
 
-Please update the landing page HTML based on their instructions. 
+Please update the landing page HTML based on their instructions.
 Ensure you return the FULL updated HTML document inside a \`[File: index.html]\` section and code block. Do not truncate or use placeholders.
 Describe the modifications and design reasoning in the thinking section at the start of your message.`;
     } else {
@@ -195,7 +264,11 @@ Tone of Voice: "${tone}"
 Color Theme Style: "${colorTheme}"
 Target Audience: "${targetAudience}"
 
-Make the design extremely modern, using grids, custom flex layouts, nice gradients, beautiful interactive card hovering animations, and high contrast. Let the copy sell the value proposition elegantly.`;
+Interview answers and prior context:
+${conversationContext || "No prior interview context was provided."}
+
+Before writing files, synthesize the interview answers into a clear design direction. Apply the active UI/UX skill rules as hard constraints: use a coherent premium design system, strong contrast, professional SVG icons instead of emojis, polished spacing, clear conversion flow, and responsive semantic layout.
+Make the design extremely modern, using grids, custom flex layouts, refined gradients only where they serve the brand, beautiful interactive card hovering animations, and high contrast. Let the copy sell the value proposition elegantly.`;
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
@@ -270,13 +343,13 @@ Make the design extremely modern, using grids, custom flex layouts, nice gradien
     });
   } catch (error: unknown) {
     console.error("Generate Website Stream API error:", error);
-    const message = error instanceof Error ? error.message : "Failed to generate website code";
-    return new Response(
-      JSON.stringify({ error: message }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      },
-    );
+    const message =
+      error instanceof Error
+        ? error.message
+        : "Failed to generate website code";
+    return new Response(JSON.stringify({ error: message }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 }
