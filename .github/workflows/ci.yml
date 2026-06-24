@@ -5,8 +5,8 @@ on:
     branches:
       - master
       - main
-      - 'feature/**'
-      - 'fix/**'
+      - "feature/**"
+      - "fix/**"
   pull_request:
     branches:
       - master
@@ -25,8 +25,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v6
         with:
-          node-version: 20
-          cache: 'npm'
+          node-version: 22
+          cache: "npm"
       - run: npm ci
       - run: npm run lint
 
@@ -37,8 +37,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v6
         with:
-          node-version: 20
-          cache: 'npm'
+          node-version: 22
+          cache: "npm"
       - run: npm ci
       - run: npx tsc --noEmit
 
@@ -49,8 +49,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v6
         with:
-          node-version: 20
-          cache: 'npm'
+          node-version: 22
+          cache: "npm"
       - run: npm ci
       - name: Next.js build cache
         uses: actions/cache@v4
@@ -76,8 +76,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v6
         with:
-          node-version: 20
-          cache: 'npm'
+          node-version: 22
+          cache: "npm"
       - run: npm ci
       - name: Deploy Preview to Cloudflare
         if: env.CLOUDFLARE_API_TOKEN != ''
@@ -97,8 +97,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v6
         with:
-          node-version: 20
-          cache: 'npm'
+          node-version: 22
+          cache: "npm"
       - run: npm ci
       - name: Deploy to Cloudflare Pages
         if: env.CLOUDFLARE_API_TOKEN != ''
