@@ -68,6 +68,9 @@ jobs:
     needs: [lint, typecheck, build]
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
     steps:
       - uses: actions/checkout@v4
@@ -77,10 +80,7 @@ jobs:
           cache: 'npm'
       - run: npm ci
       - name: Deploy Preview to Cloudflare
-        if: secrets.CLOUDFLARE_API_TOKEN != ''
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        if: env.CLOUDFLARE_API_TOKEN != ''
         run: npm run deploy -- --message "Preview for PR #${{ github.event.pull_request.number }}"
 
   # ─── 3. DEPLOY PRODUCTION (main/master merges) ─────────────────────────────
@@ -89,6 +89,9 @@ jobs:
     needs: [lint, typecheck, build]
     runs-on: ubuntu-latest
     if: (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main') && github.event_name == 'push'
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
     steps:
       - uses: actions/checkout@v4
@@ -98,8 +101,5 @@ jobs:
           cache: 'npm'
       - run: npm ci
       - name: Deploy to Cloudflare Pages
-        if: secrets.CLOUDFLARE_API_TOKEN != ''
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        if: env.CLOUDFLARE_API_TOKEN != ''
         run: npm run deploy
