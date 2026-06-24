@@ -6,7 +6,7 @@ import { useSearchParams, useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import { 
   ArrowLeft, Sparkles, Send, Loader2, MessageSquare, Plus, Trash2, Menu, X,
-  Download, Monitor, Tablet, Smartphone, Code, Eye, Info, Settings, Globe, FileText,
+  Download, Monitor, Tablet, Smartphone, Code, Eye, Info, Globe, FileText,
   FileJson, PanelRightOpen, PanelRightClose
 } from "lucide-react"
 import { Button } from "@/components/ui/Button"
@@ -70,15 +70,6 @@ interface WebProject {
   createdAt: number;
 }
 
-const TONES = ["Professional", "Witty", "Bold", "Minimalist", "Luxury"];
-const COLOR_THEMES = [
-  { name: "Indigo", value: "Indigo", bgClass: "bg-indigo-600" },
-  { name: "Emerald", value: "Emerald", bgClass: "bg-emerald-600" },
-  { name: "Violet", value: "Violet", bgClass: "bg-violet-600" },
-  { name: "Rose", value: "Rose", bgClass: "bg-rose-600" },
-  { name: "Amber", value: "Amber", bgClass: "bg-amber-500" },
-  { name: "Dark Theme", value: "Dark Theme", bgClass: "bg-slate-900" }
-];
 
 const BUILD_STEPS = [
   "Analyzing prompt & mapping wireframe...",
@@ -119,32 +110,6 @@ function BuildProgressIndicator({ step }: { step: number }) {
   )
 }
 
-interface FormFieldSelectProps {
-  label: string
-  value: string
-  onChange: (val: string) => void
-  options: { label: string; value: string }[]
-  className?: string
-}
-
-function FormFieldSelect({ label, value, onChange, options, className = "" }: FormFieldSelectProps) {
-  return (
-    <div>
-      <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1.5">{label}</label>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className={`w-full h-9 border border-brand-border rounded-lg bg-white px-2 focus:ring-2 focus:ring-brand-primary/20 ${className}`}
-      >
-        {options.map((opt) => (
-          <option key={opt.value} value={opt.value}>
-            {opt.label}
-          </option>
-        ))}
-      </select>
-    </div>
-  )
-}
 
 interface TabButtonProps {
   active: boolean
@@ -536,10 +501,9 @@ function PlaygroundContent() {
   const [chatInput, setChatInput] = useState("")
   const [loaderMinimized, setLoaderMinimized] = useState(false)
   const [buildStep, setBuildStep] = useState(0)
-  const [tone, setTone] = useState("Professional")
-  const [colorTheme, setColorTheme] = useState("Indigo")
-  const [targetAudience, setTargetAudience] = useState("General Audience")
-  const [settingsOpen, setSettingsOpen] = useState(false)
+  const [tone] = useState("Professional")
+  const [colorTheme] = useState("Indigo")
+  const [targetAudience] = useState("General Audience")
   
   // Statuses
   const [isGenerating, setIsGenerating] = useState(false)
@@ -547,8 +511,7 @@ function PlaygroundContent() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [copiedStates, setCopiedStates] = useState<{ [key: string]: boolean }>({})
-  const [skills, setSkills] = useState<{ name: string; label: string }[]>([])
-  const [selectedSkill, setSelectedSkill] = useState<string>("ui-ux-pro-max")
+  const [selectedSkill] = useState<string>("ui-ux-pro-max")
 
   // Workspace controls
   const [activeTab, setActiveTab] = useState<"preview" | "code">("preview")
@@ -572,15 +535,6 @@ function PlaygroundContent() {
     return () => timers.forEach(clearTimeout)
   }, [isGenerating])
 
-  // Fetch available skill files from API
-  useEffect(() => {
-    fetch("/api/skills")
-      .then(res => res.json())
-      .then(data => {
-        if (data.skills) setSkills(data.skills)
-      })
-      .catch(err => console.error("Failed to load skills:", err))
-  }, [])
 
   // Client-side Authentication Guard
   useEffect(() => {
@@ -1146,70 +1100,7 @@ function PlaygroundContent() {
                   {activeProject ? "Refining Site Layout" : "Create New Site"}
                 </span>
               </div>
-
-              {/* Simple Settings Toggle */}
-              <button 
-                onClick={() => setSettingsOpen(!settingsOpen)}
-                className={`p-1.5 rounded-lg border transition-all flex items-center gap-1.5 text-xs font-semibold ${
-                  settingsOpen || !activeProject
-                    ? "bg-brand-primary/10 border-brand-primary/20 text-brand-primary" 
-                    : "bg-white border-brand-border text-gray-600 hover:bg-gray-50"
-                }`}
-              >
-                <Settings className="w-3.5 h-3.5" />
-                Design System
-              </button>
             </div>
-
-            {/* Config accordion panel */}
-            <AnimatePresence>
-              {(settingsOpen || !activeProject) && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  className="border-b border-brand-border overflow-hidden bg-gray-50/30 shrink-0"
-                >
-                  <div className="p-4 space-y-4 text-xs">
-                    <div className="grid grid-cols-2 gap-3">
-                      <FormFieldSelect
-                        label="Tone of Voice"
-                        value={tone}
-                        onChange={setTone}
-                        options={TONES.map(t => ({ label: t, value: t }))}
-                      />
-                      <FormFieldSelect
-                        label="Color Palette"
-                        value={colorTheme}
-                        onChange={setColorTheme}
-                        options={COLOR_THEMES.map(c => ({ label: c.name, value: c.value }))}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1.5">Target Audience</label>
-                      <input 
-                        type="text"
-                        value={targetAudience}
-                        onChange={(e) => setTargetAudience(e.target.value)}
-                        placeholder="E.g. Developers, Small business owners..."
-                        className="w-full h-9 border border-brand-border rounded-lg bg-white px-3 focus:ring-2 focus:ring-brand-primary/20"
-                      />
-                    </div>
-                    <FormFieldSelect
-                      label="AI Generation Skill (Guidelines)"
-                      value={selectedSkill}
-                      onChange={setSelectedSkill}
-                      className="font-medium text-gray-700"
-                      options={
-                        skills.length === 0 
-                          ? [{ label: "frontend-design.md", value: "frontend-design.md" }]
-                          : skills.map(s => ({ label: s.label, value: s.name }))
-                      }
-                    />
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
 
             {/* Chat Messages Log */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin bg-slate-50/30">
