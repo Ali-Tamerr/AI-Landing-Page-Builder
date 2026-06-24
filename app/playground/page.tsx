@@ -1,7 +1,7 @@
 "use client"
 /* eslint-disable react-hooks/purity */
 
-import { useState, useEffect, Suspense, useRef } from "react"
+import React, { useState, useEffect, Suspense, useRef } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import { 
@@ -478,6 +478,138 @@ function CodeHighlighter({ code, language, onChange }: { code: string; language:
             {highlightCode(code, language)}
           </code>
         </pre>
+      </div>
+    </div>
+  );
+}
+
+interface QuestionData {
+  question: string;
+  options: string[];
+  recommendation?: string;
+}
+
+function InteractiveQuestionCard({
+  data,
+  isAnswered,
+  answeredValue,
+  onSelectOption,
+}: {
+  data: QuestionData;
+  isAnswered: boolean;
+  answeredValue: string | null;
+  onSelectOption: (val: string) => void;
+}) {
+  const [showOtherInput, setShowOtherInput] = useState(false);
+  const [otherText, setOtherText] = useState("");
+
+  const handleOptionClick = (option: string) => {
+    if (isAnswered) return;
+    onSelectOption(option);
+  };
+
+  const handleOtherClick = () => {
+    if (isAnswered) return;
+    setShowOtherInput((prev) => !prev);
+  };
+
+  const handleOtherSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!otherText.trim() || isAnswered) return;
+    onSelectOption(otherText.trim());
+    setOtherText("");
+    setShowOtherInput(false);
+  };
+
+  const options = data.options || [];
+  const recommendation = data.recommendation || "";
+  const isCustomAnswer = answeredValue && !options.includes(answeredValue);
+
+  return (
+    <div className="bg-white border-2 border-slate-900 rounded-3xl p-5 shadow-xs space-y-4 my-3 text-slate-800 w-full max-w-sm">
+      <div className="text-sm font-extrabold text-slate-900 leading-snug">
+        {`"${data.question}"?`}
+      </div>
+
+      <div className="border-2 border-slate-900 rounded-2xl p-3 bg-slate-50/30 space-y-2.5">
+        {options.map((opt, i) => {
+          const isSelected = answeredValue === opt;
+          const isRecommended = recommendation === opt || opt.toLowerCase().includes("recommended");
+
+          return (
+            <button
+              key={i}
+              type="button"
+              disabled={isAnswered}
+              onClick={() => handleOptionClick(opt)}
+              className={`w-full text-center px-4 py-2.5 rounded-xl border-2 transition-all duration-200 text-xs font-extrabold ${
+                isSelected
+                  ? "bg-slate-900 text-white border-slate-900"
+                  : isAnswered
+                  ? "bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed"
+                  : "bg-white border-slate-900 text-slate-800 hover:bg-slate-50 active:scale-[0.98]"
+              }`}
+            >
+              <div className="flex items-center justify-center gap-2">
+                <span>{opt}</span>
+                {isRecommended && !isAnswered && (
+                  <span className="bg-emerald-100 text-emerald-700 text-[8px] px-1.5 py-0.5 rounded-md font-extrabold uppercase tracking-wider">
+                    Recommended
+                  </span>
+                )}
+              </div>
+            </button>
+          );
+        })}
+
+        {/* Other option */}
+        <button
+          type="button"
+          disabled={isAnswered}
+          onClick={handleOtherClick}
+          className={`w-full text-center px-4 py-2.5 rounded-xl border-2 transition-all duration-200 text-xs font-extrabold ${
+            isCustomAnswer
+              ? "bg-slate-900 text-white border-slate-900"
+              : isAnswered
+              ? "bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed"
+              : showOtherInput
+              ? "bg-slate-100 border-slate-900 text-slate-900"
+              : "bg-white border-slate-900 text-slate-800 hover:bg-slate-50 active:scale-[0.98]"
+          }`}
+        >
+          {isCustomAnswer ? `Other: "${answeredValue}"` : "Other (write your opinion)"}
+        </button>
+
+        {/* Custom text input */}
+        <AnimatePresence>
+          {showOtherInput && !isAnswered && (
+            <motion.form
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              onSubmit={handleOtherSubmit}
+              className="pt-2 space-y-2 overflow-hidden"
+            >
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={otherText}
+                  onChange={(e) => setOtherText(e.target.value)}
+                  placeholder="Write your custom answer..."
+                  className="flex-1 h-9 border-2 border-slate-900 rounded-xl px-3 text-xs bg-white text-slate-800 outline-none focus:ring-2 focus:ring-brand-primary/20 font-semibold"
+                  autoFocus
+                />
+                <button
+                  type="submit"
+                  disabled={!otherText.trim()}
+                  className="h-9 w-9 bg-brand-primary border-2 border-slate-900 text-white hover:bg-brand-primary-hover disabled:bg-slate-100 disabled:text-slate-400 disabled:border-slate-200 rounded-xl flex items-center justify-center transition-all duration-200 shrink-0"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </motion.form>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
@@ -1136,7 +1268,49 @@ function PlaygroundContent() {
                               ol: ({ ...props }) => <ol className="list-decimal pl-4 mb-2 space-y-0.5 text-gray-700" {...props} />,
                               li: ({ ...props }) => <li className="text-gray-700" {...props} />,
                               strong: ({ ...props }) => <strong className="font-extrabold text-gray-950" {...props} />,
-                              code: ({ ...props }) => <code className="bg-gray-100 rounded px-1.5 py-0.5 font-mono text-[11px] text-indigo-600 font-semibold" {...props} />
+                              pre: ({ children, ...props }: React.HTMLAttributes<HTMLPreElement>) => {
+                                const isQuestion = React.Children.toArray(children).some((child) => {
+                                  return React.isValidElement<{ className?: string }>(child) && 
+                                    child.props.className && 
+                                    child.props.className.includes("language-question");
+                                });
+                                if (isQuestion) {
+                                  return <>{children}</>;
+                                }
+                                return <pre className="bg-slate-900 text-white rounded-lg p-4 my-2 overflow-x-auto" {...props}>{children}</pre>;
+                              },
+                              code: ({ className, children, ...props }: React.HTMLAttributes<HTMLElement>) => {
+                                const match = /language-(\w+)/.exec(className || "");
+                                const isQuestion = match && match[1] === "question";
+                                
+                                if (isQuestion) {
+                                  try {
+                                    const data = JSON.parse(String(children).trim());
+                                    const msgIndex = activeProject.messages.findIndex(m => m.id === msg.id);
+                                    const nextMsg = activeProject.messages[msgIndex + 1];
+                                    const answeredValue = nextMsg && nextMsg.sender === "user" ? nextMsg.text : null;
+                                    const isAnswered = answeredValue !== null;
+
+                                    return (
+                                      <InteractiveQuestionCard 
+                                        data={data} 
+                                        isAnswered={isAnswered}
+                                        answeredValue={answeredValue}
+                                        onSelectOption={(val) => {
+                                          handleSendMessage(undefined, val);
+                                        }}
+                                      />
+                                    );
+                                  } catch (e) {
+                                    console.error("Failed to parse question JSON:", e);
+                                  }
+                                }
+                                return (
+                                  <code className="bg-gray-100 rounded px-1.5 py-0.5 font-mono text-[11px] text-indigo-600 font-semibold" {...props}>
+                                    {children}
+                                  </code>
+                                );
+                              }
                             }}
                           >
                             {msg.text}
