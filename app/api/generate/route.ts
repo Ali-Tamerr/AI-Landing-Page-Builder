@@ -204,6 +204,8 @@ Landing Page Guidelines:
 - Do NOT use Tailwind CSS, Bootstrap, React, Vue, Angular, Next.js, or any other framework/library by default. Only use a tool/library if the user explicitly selected it in the interview or asked for it in the prompt.
 - If no tool/library choice is available, default to vanilla HTML, modern custom CSS, and small modular JavaScript files.
 - Include a modern premium font setup when it improves the design, but keep dependencies intentional and minimal.
+- Image reliability is mandatory. Do not use random or guessed image URLs. If the user did not provide real image URLs/assets, prefer CSS/SVG visual treatments, inline SVG illustrations, gradients, or stable royalty-free remote images with descriptive alt text. Every '<img>' must include meaningful 'alt', explicit dimensions or aspect-ratio styling, 'loading="lazy"' where appropriate, and an 'onerror' fallback or JS fallback that replaces broken images with a designed placeholder.
+- If the design needs product/portfolio imagery but no reliable assets are available, create polished CSS/SVG placeholders that match the brand instead of emitting fragile external image URLs.
 - The document MUST be a complete, long-form website with distinct components:
   1. A sleek Sticky Header with logo and navigation links.
   2. A high-impact Hero section with a strong headline, product/service copy, floating interactive elements, and an email signup or call-to-action form.
@@ -239,8 +241,9 @@ ACTIVE MODE: GRILL-ME INTERVIEW.
 You are NOT allowed to generate website files yet.
 Do NOT output [File: ...] blocks, HTML, CSS, JavaScript, or implementation code.
 Ask exactly ONE next question that resolves the most important missing requirement before building.
-Use this interview order: product goal, exact audience, tools/libraries/stack, brand personality, page sections/content flow, visual theme, interactions.
+Use this interview order: product goal, exact audience, tools/libraries/stack, image/assets source, brand personality, page sections/content flow, visual theme, interactions.
 You MUST ask one tools/libraries question before building if the conversation does not already specify the implementation stack. That question should let the user choose between options such as vanilla HTML/CSS/JS, React, Vue, Angular, Next.js + TypeScript, plus CSS approach choices like custom CSS, Tailwind CSS, or Bootstrap.
+You SHOULD ask an image/assets source question before building if the site depends on product, portfolio, team, gallery, or hero imagery and the user has not provided image URLs/assets. Recommend reliable provided assets or designed SVG/CSS placeholders over fragile guessed remote URLs.
 Each question must include 3-4 concrete options and one recommendation derived from the active UI/UX skill rules. For the tools/libraries question, highlight the best suitable option via the \`recommendation\` field.
 Return only a short lead-in sentence and one \`\`\`question JSON block.
 The question block must contain strict valid JSON only: double-quoted keys, double-quoted string values, no trailing commas, no comments, and escaped quotes inside strings.`;
@@ -254,7 +257,7 @@ Target Audience: "${targetAudience}"
 Conversation so far:
 ${conversationContext || "No previous interview answers yet."}
 
-Ask the single next best question. If the user has not chosen tools/libraries yet, ask that stack/tools question now. Do not build yet.`;
+Ask the single next best question. If the user has not chosen tools/libraries yet, ask that stack/tools question now. If the implementation stack is already clear but image/assets source is unclear for an image-heavy site, ask the image/assets question next. Do not build yet.`;
     } else if (body.files && body.files.length > 0) {
       userPrompt = `You are refining an existing web project based on a new user instruction.
 Current Project Files:
@@ -268,6 +271,7 @@ Target Audience: "${targetAudience}"
 Please update the project files based on their instructions. You can add new files, folders, HTML pages, CSS modules, JavaScript modules, or framework files when the selected stack calls for it.
 Do not collapse the project back into only index.html, style.css, and script.js unless the user explicitly asks for a tiny single-page static site.
 Do not introduce Tailwind CSS, Bootstrap, React, Vue, Angular, Next.js, or any other library unless it was already selected or requested.
+Audit any '<img>' or CSS background image you add or keep: avoid broken/guessed URLs, add alt text, sizing, lazy loading where appropriate, and a fallback for failures.
 Ensure you return the FULL updated files inside their respective \`[File: filename.ext]\` sections and code blocks. Do not truncate or use placeholders.
 Describe the modifications and design reasoning in the thinking section at the start of your message.`;
     } else if (previousHtml) {
@@ -284,6 +288,7 @@ Target Audience: "${targetAudience}"
 
 Please update the landing page based on their instructions. If the page has grown beyond a tiny one-file demo, split the result into clean files and folders instead of returning only one monolithic HTML document.
 Do not introduce Tailwind CSS, Bootstrap, React, Vue, Angular, Next.js, or any other library unless it was already selected or requested.
+Audit any '<img>' or CSS background image you add or keep: avoid broken/guessed URLs, add alt text, sizing, lazy loading where appropriate, and a fallback for failures.
 Ensure you return the FULL updated files inside \`[File: filename.ext]\` sections and code blocks. Do not truncate or use placeholders.
 Describe the modifications and design reasoning in the thinking section at the start of your message.`;
     } else {
@@ -296,7 +301,7 @@ Target Audience: "${targetAudience}"
 Interview answers and prior context:
 ${conversationContext || "No prior interview context was provided."}
 
-Before writing files, synthesize the interview answers into a clear design direction and implementation plan. Respect the user's selected stack and CSS approach. If the user did not select Tailwind CSS or Bootstrap, write custom CSS instead of using those libraries.
+Before writing files, synthesize the interview answers into a clear design direction and implementation plan. Respect the user's selected stack, CSS approach, and image/assets preference. If the user did not select Tailwind CSS or Bootstrap, write custom CSS instead of using those libraries. If the user did not provide reliable image assets, use designed CSS/SVG placeholders or stable royalty-free image sources with robust fallbacks instead of guessed URLs.
 Apply the active UI/UX skill rules as hard constraints: use a coherent premium design system, strong contrast, professional SVG icons instead of emojis, polished spacing, clear conversion flow, and responsive semantic layout.
 Make the design extremely modern, using grids, custom flex layouts, refined gradients only where they serve the brand, beautiful interactive card hovering animations, and high contrast. Let the copy sell the value proposition elegantly.`;
     }
