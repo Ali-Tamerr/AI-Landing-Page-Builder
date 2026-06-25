@@ -776,12 +776,24 @@ function InteractiveQuestionCard({
   const isCustomAnswer = answeredValue && !options.includes(answeredValue);
 
   return (
-    <div className="bg-white border-2 border-slate-900 rounded-3xl p-5 shadow-xs space-y-4 my-3 text-slate-800 w-full max-w-sm">
-      <div className="text-sm font-extrabold text-slate-900 leading-snug">
-        {`"${data.question}"?`}
+    <div className="my-3 w-full max-w-md rounded-2xl border border-brand-border bg-white p-4 shadow-[0_12px_32px_rgba(15,23,42,0.08)] text-slate-800">
+      <div className="mb-3 flex items-start gap-3">
+        <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-primary/10 text-[11px] font-black text-brand-primary">
+          ?
+        </div>
+        <div>
+          <p className="text-sm font-bold leading-snug text-slate-950">
+            {data.question}
+          </p>
+          {!isAnswered && (
+            <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
+              Pick the closest answer, or write your own.
+            </p>
+          )}
+        </div>
       </div>
 
-      <div className="border-2 border-slate-900 rounded-2xl p-3 bg-slate-50/30 space-y-2.5">
+      <div className="space-y-2">
         {options.map((opt, i) => {
           const isSelected = answeredValue === opt;
           const isRecommended =
@@ -793,22 +805,22 @@ function InteractiveQuestionCard({
               type="button"
               disabled={isAnswered}
               onClick={() => handleOptionClick(opt)}
-              className={`w-full text-center px-4 py-2.5 rounded-xl border-2 transition-all duration-200 text-xs font-extrabold ${
+              className={`group w-full rounded-xl border px-3.5 py-3 text-left text-xs font-semibold leading-snug transition-all duration-200 ${
                 isSelected
-                  ? "bg-slate-900 text-white border-slate-900"
+                  ? "border-brand-primary bg-brand-primary text-white shadow-[0_8px_20px_rgba(20,184,166,0.22)]"
                   : isAnswered
-                    ? "bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed"
-                    : "bg-white border-slate-900 text-slate-800 hover:bg-slate-50 active:scale-[0.98]"
+                    ? "cursor-not-allowed border-slate-200 bg-slate-50 text-slate-400"
+                    : "border-slate-200 bg-white text-slate-800 hover:border-brand-primary/60 hover:bg-brand-primary/5 hover:text-slate-950 active:scale-[0.99]"
               }`}
             >
-              <div className="flex items-center justify-center gap-2">
+              <span className="flex items-start justify-between gap-3">
                 <span>{opt}</span>
                 {isRecommended && !isAnswered && (
-                  <span className="bg-emerald-100 text-emerald-700 text-[8px] px-1.5 py-0.5 rounded-md font-extrabold uppercase tracking-wider">
-                    Recommended
+                  <span className="shrink-0 rounded-full bg-brand-primary/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-brand-primary group-hover:bg-white">
+                    Best fit
                   </span>
                 )}
-              </div>
+              </span>
             </button>
           );
         })}
@@ -818,19 +830,19 @@ function InteractiveQuestionCard({
           type="button"
           disabled={isAnswered}
           onClick={handleOtherClick}
-          className={`w-full text-center px-4 py-2.5 rounded-xl border-2 transition-all duration-200 text-xs font-extrabold ${
+          className={`w-full rounded-xl border px-3.5 py-3 text-left text-xs font-semibold leading-snug transition-all duration-200 ${
             isCustomAnswer
-              ? "bg-slate-900 text-white border-slate-900"
+              ? "border-brand-primary bg-brand-primary text-white shadow-[0_8px_20px_rgba(20,184,166,0.22)]"
               : isAnswered
-                ? "bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed"
+                ? "cursor-not-allowed border-slate-200 bg-slate-50 text-slate-400"
                 : showOtherInput
-                  ? "bg-slate-100 border-slate-900 text-slate-900"
-                  : "bg-white border-slate-900 text-slate-800 hover:bg-slate-50 active:scale-[0.98]"
+                  ? "border-brand-primary/60 bg-brand-primary/5 text-slate-950"
+                  : "border-slate-200 bg-white text-slate-800 hover:border-brand-primary/60 hover:bg-brand-primary/5 hover:text-slate-950 active:scale-[0.99]"
           }`}
         >
           {isCustomAnswer
             ? `Other: "${answeredValue}"`
-            : "Other (write your opinion)"}
+            : "Other — write a custom answer"}
         </button>
 
         {/* Custom text input */}
@@ -841,21 +853,21 @@ function InteractiveQuestionCard({
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               onSubmit={handleOtherSubmit}
-              className="pt-2 space-y-2 overflow-hidden"
+              className="overflow-hidden pt-2"
             >
-              <div className="flex gap-2">
+              <div className="flex gap-2 rounded-xl border border-brand-primary/20 bg-brand-primary/5 p-2">
                 <input
                   type="text"
                   value={otherText}
                   onChange={(e) => setOtherText(e.target.value)}
                   placeholder="Write your custom answer..."
-                  className="flex-1 h-9 border-2 border-slate-900 rounded-xl px-3 text-xs bg-white text-slate-800 outline-none focus:ring-2 focus:ring-brand-primary/20 font-semibold"
+                  className="h-9 min-w-0 flex-1 rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 outline-none placeholder:text-slate-400 focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/15"
                   autoFocus
                 />
                 <button
                   type="submit"
                   disabled={!otherText.trim()}
-                  className="h-9 w-9 bg-brand-primary border-2 border-slate-900 text-white hover:bg-brand-primary-hover disabled:bg-slate-100 disabled:text-slate-400 disabled:border-slate-200 rounded-xl flex items-center justify-center transition-all duration-200 shrink-0"
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-primary text-white transition-all duration-200 hover:bg-brand-primary-dark disabled:bg-slate-200 disabled:text-slate-400"
                 >
                   <Send className="w-3.5 h-3.5" />
                 </button>
