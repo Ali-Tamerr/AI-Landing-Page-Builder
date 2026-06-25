@@ -883,6 +883,7 @@ function PlaygroundContent() {
   );
 
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const chatInputRef = useRef<HTMLTextAreaElement>(null);
 
   // Lifted build step status and minimize state timers
   useEffect(() => {
@@ -1042,6 +1043,16 @@ function PlaygroundContent() {
   }, [currentProjectId]);
 
   const activeProject = projects.find((p) => p.id === currentProjectId);
+
+  useEffect(() => {
+    const input = chatInputRef.current;
+    if (!input) return;
+
+    input.style.height = "auto";
+    const nextHeight = Math.min(input.scrollHeight, 120);
+    input.style.height = `${Math.max(nextHeight, 48)}px`;
+    input.style.overflowY = input.scrollHeight > 120 ? "auto" : "hidden";
+  }, [chatInput, activeProject]);
 
   // Copy handler
   const handleCopyText = (text: string, label: string) => {
@@ -1790,6 +1801,7 @@ function PlaygroundContent() {
                 className="relative flex items-center"
               >
                 <textarea
+                  ref={chatInputRef}
                   value={chatInput}
                   onChange={(e) => setChatInput(e.target.value)}
                   placeholder={
@@ -1797,7 +1809,7 @@ function PlaygroundContent() {
                       ? "Ask to modify design, add features, change copy..."
                       : "Describe your landing page idea — I’ll ask a few design questions first..."
                   }
-                  className="w-full min-h-[48px] max-h-[120px] pr-12 pl-4 py-3 border border-brand-border rounded-2xl bg-gray-50/50 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary transition-all resize-none text-gray-800 placeholder:text-gray-400"
+                  className="w-full min-h-[48px] max-h-[120px] pr-12 pl-4 py-3 border border-brand-border rounded-2xl bg-gray-50/50 text-sm leading-5 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary transition-all resize-none overflow-hidden text-gray-800 placeholder:text-gray-400"
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && !e.shiftKey) {
                       e.preventDefault();
