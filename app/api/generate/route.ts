@@ -36,7 +36,13 @@ const readSkillMarkdownFallback = (skillDir: string, selectedSkill: string) => {
   ];
 
   return candidates
-    .filter((candidate) => fs.existsSync(candidate))
+    .filter((candidate) => {
+      try {
+        return fs.existsSync(candidate) && fs.statSync(candidate).isFile();
+      } catch {
+        return false;
+      }
+    })
     .map((candidate) => fs.readFileSync(candidate, "utf-8"))
     .join("\n\n");
 };
@@ -217,7 +223,8 @@ Do NOT output [File: ...] blocks, HTML, CSS, JavaScript, or implementation code.
 Ask exactly ONE next question that resolves the most important missing requirement before building.
 Use the design tree order: product goal, exact audience, brand personality, page sections/content flow, visual theme, interactions.
 Each question must include 3-4 concrete options and one recommendation derived from the active UI/UX skill rules.
-Return only a short lead-in sentence and one \`\`\`question JSON block.`;
+Return only a short lead-in sentence and one \`\`\`question JSON block.
+The question block must contain strict valid JSON only: double-quoted keys, double-quoted string values, no trailing commas, no comments, and escaped quotes inside strings.`;
 
       userPrompt = `Interview the user before building a landing page.
 Original/latest user input: "${prompt}"

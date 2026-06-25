@@ -715,6 +715,30 @@ interface QuestionData {
   recommendation?: string;
 }
 
+function parseQuestionData(raw: string): QuestionData | null {
+  try {
+    const data = JSON.parse(raw.trim()) as Partial<QuestionData>;
+    if (
+      typeof data.question !== "string" ||
+      !Array.isArray(data.options) ||
+      data.options.some((option) => typeof option !== "string")
+    ) {
+      return null;
+    }
+
+    return {
+      question: data.question,
+      options: data.options,
+      recommendation:
+        typeof data.recommendation === "string"
+          ? data.recommendation
+          : undefined,
+    };
+  } catch {
+    return null;
+  }
+}
+
 function InteractiveQuestionCard({
   data,
   isAnswered,
@@ -1256,7 +1280,8 @@ function PlaygroundContent() {
         accumulatedText += chunk;
 
         const parsed = parseStreamingMarkdown(accumulatedText);
-        currentThinking = parsed.thinking;
+        currentThinking =
+          generationMode === "interview" ? accumulatedText : parsed.thinking;
         if (parsed.files && parsed.files.length > 0) {
           // eslint-disable-next-line react-hooks/immutability
           currentFiles = parsed.files;
@@ -1310,7 +1335,7 @@ function PlaygroundContent() {
         text:
           currentThinking ||
           (generationMode === "interview"
-            ? "Interview question ready."
+            ? accumulatedText || "Interview question ready."
             : "Website generation complete!"),
         createdAt: Date.now(),
       };
@@ -1698,10 +1723,11 @@ function PlaygroundContent() {
                                   match && match[1] === "question";
 
                                 if (isQuestion) {
-                                  try {
-                                    const data = JSON.parse(
-                                      String(children).trim(),
-                                    );
+                                  const data = parseQuestionData(
+                                    String(children),
+                                  );
+
+                                  if (data) {
                                     const msgIndex =
                                       activeProject.messages.findIndex(
                                         (m) => m.id === msg.id,
@@ -1724,12 +1750,9 @@ function PlaygroundContent() {
                                         }}
                                       />
                                     );
-                                  } catch (e) {
-                                    console.error(
-                                      "Failed to parse question JSON:",
-                                      e,
-                                    );
                                   }
+
+                                  return null;
                                 }
                                 return (
                                   <code
