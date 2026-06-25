@@ -394,23 +394,139 @@ function compileProjectPreview(
     },
   );
 
-  // Intercept navigation clicks between local files in the preview iframe
+  const localHtmlFiles = files
+    .filter((file) => file.language === "html" || file.name.endsWith(".html"))
+    .map((file) => file.name);
+
+  // Keep generated-site navigation inside the preview iframe. Models often emit
+  // section links as "FAQ", "/faq", or extensionless page links like "about".
+  // Without interception, srcDoc can resolve those against /playground/.
   const linkInterceptorScript = `
 <script>
-  document.addEventListener('click', function(e) {
-    const target = e.target.closest('a');
-    if (target && target.getAttribute('href')) {
-      const href = target.getAttribute('href');
-      if (!href.startsWith('http') && !href.startsWith('//') && !href.startsWith('#')) {
-        e.preventDefault();
-        window.parent.postMessage({ type: 'PREVIEW_NAVIGATE', fileName: href }, '*');
-      }
+  (function () {
+    var localHtmlFiles = ${JSON.stringify(localHtmlFiles)};
+
+    function slug(value) {
+      return String(value || '')
+        .trim()
+        .toLowerCase()
+        .replace(/\\.[a-z0-9]+$/, '')
+        .replace(/^[/#]+/, '')
+        .replace(/&/g, 'and')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
     }
-  });
+
+    function cleanHref(href) {
+      return href.trim().split('#')[0].split('?')[0].replace(/^\\.\\//, '').replace(/^\\/+/, '');
+    }
+
+    function findLocalFile(href) {
+      var clean = cleanHref(href) || 'index.html';
+      var candidates = [clean, clean + '.html', clean.replace(/\\/$/, '') + '/index.html'];
+      for (var i = 0; i < candidates.length; i++) {
+        var candidate = candidates[i].toLowerCase();
+        for (var j = 0; j < localHtmlFiles.length; j++) {
+          if (localHtmlFiles[j].toLowerCase() === candidate) return localHtmlFiles[j];
+        }
+      }
+      return null;
+    }
+
+    function sectionTokens(rawHref, linkText) {
+      var raw = rawHref.trim();
+      var sectionId = raw.indexOf('#') >= 0 ? raw.slice(raw.indexOf('#') + 1) : raw;
+      sectionId = sectionId.split('?')[0].split('#')[0].replace(/^\\/+/, '').trim();
+      var tokens = [sectionId, linkText || ''];
+      try { tokens.push(decodeURIComponent(sectionId)); } catch (_) {}
+      return tokens.map(slug).filter(Boolean);
+    }
+
+    function findSection(rawHref, linkText) {
+      var tokens = sectionTokens(rawHref, linkText);
+      if (!tokens.length) return null;
+
+      var idElements = Array.prototype.slice.call(document.querySelectorAll('[id], [name]'));
+      for (var i = 0; i < idElements.length; i++) {
+        var el = idElements[i];
+        var idSlug = slug(el.getAttribute('id') || el.getAttribute('name'));
+        if (tokens.indexOf(idSlug) !== -1) return el;
+      }
+
+      var headings = Array.prototype.slice.call(document.querySelectorAll('main h1, main h2, main h3, main h4, section h1, section h2, section h3, section h4, h1, h2, h3, h4'));
+      for (var h = 0; h < headings.length; h++) {
+        var heading = headings[h];
+        var headingSlug = slug(heading.textContent || '');
+        for (var t = 0; t < tokens.length; t++) {
+          if (headingSlug === tokens[t] || headingSlug.indexOf(tokens[t]) !== -1 || tokens[t].indexOf(headingSlug) !== -1) {
+            return heading.closest('section, article, main > div') || heading;
+          }
+        }
+      }
+
+      return null;
+    }
+
+    function scrollToTarget(section) {
+      if (!section) {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
+      section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    document.addEventListener('click', function(e) {
+      var target = e.target && e.target.closest ? e.target.closest('a[href]') : null;
+      if (!target) return;
+
+      var href = target.getAttribute('href');
+      if (!href) return;
+
+      var rawHref = href.trim();
+      var lowerHref = rawHref.toLowerCase();
+
+      if (
+        lowerHref.startsWith('mailto:') ||
+        lowerHref.startsWith('tel:') ||
+        lowerHref.startsWith('javascript:') ||
+        lowerHref.startsWith('data:') ||
+        lowerHref.startsWith('http://') ||
+        lowerHref.startsWith('https://') ||
+        lowerHref.startsWith('//')
+      ) {
+        return;
+      }
+
+      var targetFile = findLocalFile(rawHref);
+      if (targetFile) {
+        e.preventDefault();
+        window.parent.postMessage({ type: 'PREVIEW_NAVIGATE', fileName: targetFile }, '*');
+        return;
+      }
+
+      var looksLikeSectionLink =
+        rawHref === '/' ||
+        rawHref.startsWith('#') ||
+        rawHref.startsWith('/#') ||
+        /^\\/?[A-Za-z0-9 _-]+$/.test(rawHref);
+
+      if (looksLikeSectionLink) {
+        e.preventDefault();
+        if (rawHref === '/' || rawHref === '#' || rawHref === '#top') {
+          scrollToTarget(null);
+          return;
+        }
+
+        scrollToTarget(findSection(rawHref, target.textContent || ''));
+      }
+    }, true);
+  })();
 </script>
 `;
 
-  return htmlContent + linkInterceptorScript;
+  return /<\/body>/i.test(htmlContent)
+    ? htmlContent.replace(/<\/body>/i, `${linkInterceptorScript}</body>`)
+    : htmlContent + linkInterceptorScript;
 }
 
 function CodeHighlighter({
@@ -1064,9 +1180,16 @@ function PlaygroundContent() {
         setProjects((prev) =>
           prev.map((p) => {
             if (p.id === currentProjectId) {
+              const files = p.files || [];
+              const targetExists = files.some(
+                (file) => file.name === targetFile,
+              );
+              if (!targetExists) return p;
+
               return {
                 ...p,
                 activeFileName: targetFile,
+                landingPageHtml: compileProjectPreview(files, targetFile),
               };
             }
             return p;
@@ -2110,7 +2233,23 @@ function PlaygroundContent() {
                     </div>
 
                     <iframe
-                      srcDoc={activeProject.landingPageHtml}
+                      srcDoc={
+                        activeProject.files?.length
+                          ? compileProjectPreview(
+                              activeProject.files,
+                              activeProject.activeFileName || "index.html",
+                            )
+                          : compileProjectPreview(
+                              [
+                                {
+                                  name: "index.html",
+                                  language: "html",
+                                  content: activeProject.landingPageHtml,
+                                },
+                              ],
+                              "index.html",
+                            )
+                      }
                       title="Landing page preview sandbox"
                       className="flex-1 w-full border-none bg-white"
                       sandbox="allow-scripts allow-same-origin"
