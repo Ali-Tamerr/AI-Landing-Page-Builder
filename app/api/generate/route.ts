@@ -124,7 +124,7 @@ export async function POST(req: Request) {
 
     let systemInstruction = `You are a world-class frontend engineer and UI/UX expert.
 You build premium, beautiful, modern, high-converting websites and landing pages.
-You support creating multiple HTML, CSS, and JS files per project to keep the code modular and clean if needed (e.g. index.html, about.html, style.css, script.js, etc).
+You support creating clean, modular projects with as many files and folders as necessary. For static builds, do not default to only index.html, style.css, and script.js; split code into meaningful HTML pages, CSS modules, JavaScript modules, and asset folders when it improves maintainability.
 You must output your response in standard Markdown format:
 1. First, write a short, friendly explanation/thinking section (approx 50-100 words) written to the user explaining what design choices you made, what files you created/modified, and how they align with their request.
 2. Then, write each file in the project prefixed by "[File: filename.ext]" followed by the file's code block.
@@ -159,34 +159,51 @@ Which color theme would you prefer for the landing page? I recommend Indigo & Sl
 }
 \`\`\`
 
-Format example for projects with source code files:
+Format example for modular static projects:
 [File: index.html]
 \`\`\`html
 <!DOCTYPE html>
 <html>
 <head>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="assets/css/base.css">
+  <link rel="stylesheet" href="assets/css/home.css">
 </head>
 <body>
   ...
-  <script src="script.js"></script>
+  <script type="module" src="assets/js/main.js"></script>
 </body>
 </html>
 \`\`\`
 
-[File: style.css]
-\`\`\`css
-/* Custom styles here */
+[File: pages/about.html]
+\`\`\`html
+<!-- Additional page when the project needs one -->
 \`\`\`
 
-[File: script.js]
+[File: assets/css/base.css]
+\`\`\`css
+/* Design tokens, reset, typography, shared layout primitives */
+\`\`\`
+
+[File: assets/css/home.css]
+\`\`\`css
+/* Page-specific sections and responsive styling */
+\`\`\`
+
+[File: assets/js/main.js]
 \`\`\`javascript
-// Custom scripting here
+// App shell interactions and shared utilities
+\`\`\`
+
+[File: assets/js/navigation.js]
+\`\`\`javascript
+// Navigation, menus, in-page scrolling, and active states
 \`\`\`
 
 Landing Page Guidelines:
-- It MUST include a \`<script src="https://cdn.tailwindcss.com"></script>\` tag and a modern premium Google Font (like Plus Jakarta Sans, Outfit, or Inter) in the \`<head>\` for gorgeous layout styling.
+- Do NOT use Tailwind CSS, Bootstrap, React, Vue, Angular, Next.js, or any other framework/library by default. Only use a tool/library if the user explicitly selected it in the interview or asked for it in the prompt.
+- If no tool/library choice is available, default to vanilla HTML, modern custom CSS, and small modular JavaScript files.
+- Include a modern premium font setup when it improves the design, but keep dependencies intentional and minimal.
 - The document MUST be a complete, long-form website with distinct components:
   1. A sleek Sticky Header with logo and navigation links.
   2. A high-impact Hero section with a strong headline, product/service copy, floating interactive elements, and an email signup or call-to-action form.
@@ -198,7 +215,8 @@ Landing Page Guidelines:
   8. A detailed, multi-column Footer with copyright, brand description, and links.
 - Make the design feel premium, using HSL colors, smooth gradients, subtle micro-interactions, custom scrollbars, and modern shadows.
 - Match the color scheme of "${colorTheme}" (e.g., if Indigo, Violet, Emerald, Rose, Amber, or Dark Theme).
-- Use Tailwind CSS colors and classes for everything.
+- Use semantic file organization. Prefer folders such as \`pages/\`, \`assets/css/\`, \`assets/js/\`, \`assets/data/\`, and \`components/\` when the project is large enough to benefit from them.
+- Keep shared styles, page-specific styles, and behavior separated. Avoid dumping all styling and scripting into one file unless the project is truly tiny.
 - Ensure the layout is 100% responsive, uses semantic tags, and has complete, high-quality copywriting (never use empty layout placeholders or lorem ipsum).`;
 
     if (skillContent) {
@@ -221,8 +239,9 @@ ACTIVE MODE: GRILL-ME INTERVIEW.
 You are NOT allowed to generate website files yet.
 Do NOT output [File: ...] blocks, HTML, CSS, JavaScript, or implementation code.
 Ask exactly ONE next question that resolves the most important missing requirement before building.
-Use the design tree order: product goal, exact audience, brand personality, page sections/content flow, visual theme, interactions.
-Each question must include 3-4 concrete options and one recommendation derived from the active UI/UX skill rules.
+Use this interview order: product goal, exact audience, tools/libraries/stack, brand personality, page sections/content flow, visual theme, interactions.
+You MUST ask one tools/libraries question before building if the conversation does not already specify the implementation stack. That question should let the user choose between options such as vanilla HTML/CSS/JS, React, Vue, Angular, Next.js + TypeScript, plus CSS approach choices like custom CSS, Tailwind CSS, or Bootstrap.
+Each question must include 3-4 concrete options and one recommendation derived from the active UI/UX skill rules. For the tools/libraries question, highlight the best suitable option via the \`recommendation\` field.
 Return only a short lead-in sentence and one \`\`\`question JSON block.
 The question block must contain strict valid JSON only: double-quoted keys, double-quoted string values, no trailing commas, no comments, and escaped quotes inside strings.`;
 
@@ -235,7 +254,7 @@ Target Audience: "${targetAudience}"
 Conversation so far:
 ${conversationContext || "No previous interview answers yet."}
 
-Ask the single next best question. Do not build yet.`;
+Ask the single next best question. If the user has not chosen tools/libraries yet, ask that stack/tools question now. Do not build yet.`;
     } else if (body.files && body.files.length > 0) {
       userPrompt = `You are refining an existing web project based on a new user instruction.
 Current Project Files:
@@ -246,7 +265,9 @@ Tone of Voice: "${tone}"
 Color Theme Style: "${colorTheme}"
 Target Audience: "${targetAudience}"
 
-Please update the project files based on their instructions. You can add new HTML, CSS, or JS files, or modify/remove existing files.
+Please update the project files based on their instructions. You can add new files, folders, HTML pages, CSS modules, JavaScript modules, or framework files when the selected stack calls for it.
+Do not collapse the project back into only index.html, style.css, and script.js unless the user explicitly asks for a tiny single-page static site.
+Do not introduce Tailwind CSS, Bootstrap, React, Vue, Angular, Next.js, or any other library unless it was already selected or requested.
 Ensure you return the FULL updated files inside their respective \`[File: filename.ext]\` sections and code blocks. Do not truncate or use placeholders.
 Describe the modifications and design reasoning in the thinking section at the start of your message.`;
     } else if (previousHtml) {
@@ -261,11 +282,12 @@ Tone of Voice: "${tone}"
 Color Theme Style: "${colorTheme}"
 Target Audience: "${targetAudience}"
 
-Please update the landing page HTML based on their instructions.
-Ensure you return the FULL updated HTML document inside a \`[File: index.html]\` section and code block. Do not truncate or use placeholders.
+Please update the landing page based on their instructions. If the page has grown beyond a tiny one-file demo, split the result into clean files and folders instead of returning only one monolithic HTML document.
+Do not introduce Tailwind CSS, Bootstrap, React, Vue, Angular, Next.js, or any other library unless it was already selected or requested.
+Ensure you return the FULL updated files inside \`[File: filename.ext]\` sections and code blocks. Do not truncate or use placeholders.
 Describe the modifications and design reasoning in the thinking section at the start of your message.`;
     } else {
-      userPrompt = `Create a brand new web project. You can generate multiple files (e.g. index.html, style.css, script.js) to build a gorgeous landing page or multi-page experience.
+      userPrompt = `Create a brand new web project using the stack/tools selected during the interview. For vanilla HTML/CSS/JS projects, generate a clean folder structure and multiple focused files when appropriate, not just index.html, style.css, and script.js.
 Product/Service Description: "${prompt}"
 Tone of Voice: "${tone}"
 Color Theme Style: "${colorTheme}"
@@ -274,7 +296,8 @@ Target Audience: "${targetAudience}"
 Interview answers and prior context:
 ${conversationContext || "No prior interview context was provided."}
 
-Before writing files, synthesize the interview answers into a clear design direction. Apply the active UI/UX skill rules as hard constraints: use a coherent premium design system, strong contrast, professional SVG icons instead of emojis, polished spacing, clear conversion flow, and responsive semantic layout.
+Before writing files, synthesize the interview answers into a clear design direction and implementation plan. Respect the user's selected stack and CSS approach. If the user did not select Tailwind CSS or Bootstrap, write custom CSS instead of using those libraries.
+Apply the active UI/UX skill rules as hard constraints: use a coherent premium design system, strong contrast, professional SVG icons instead of emojis, polished spacing, clear conversion flow, and responsive semantic layout.
 Make the design extremely modern, using grids, custom flex layouts, refined gradients only where they serve the brand, beautiful interactive card hovering animations, and high contrast. Let the copy sell the value proposition elegantly.`;
     }
 

@@ -106,10 +106,21 @@ interface ChatMessage {
   createdAt: number;
 }
 
+type ProjectFileLanguage =
+  | "html"
+  | "css"
+  | "javascript"
+  | "typescript"
+  | "jsx"
+  | "tsx"
+  | "vue"
+  | "json"
+  | "markdown";
+
 interface ProjectFile {
   name: string;
   content: string;
-  language: "html" | "css" | "javascript" | "json";
+  language: ProjectFileLanguage;
 }
 
 interface WebProject {
@@ -130,11 +141,24 @@ const BUILD_STEPS = [
   "Synthesizing interview answers...",
   "Generating a design-system direction...",
   "Drafting semantic page structure...",
-  "Applying premium Tailwind styling...",
+  "Applying the selected styling system...",
   "Rendering finalized website preview...",
 ];
 
 const MIN_INTERVIEW_QUESTIONS = 4;
+
+const hasImplementationStackChoice = (
+  messages: ChatMessage[],
+  prompt: string,
+) => {
+  const text = [...messages.map((message) => message.text), prompt]
+    .join("\n")
+    .toLowerCase();
+
+  return /\b(html|css|javascript|vanilla|react|vue|angular|next\.js|nextjs|typescript|tailwind|bootstrap|custom css)\b/.test(
+    text,
+  );
+};
 
 const countInterviewQuestions = (messages: ChatMessage[]) => {
   return messages.filter((message) => {
@@ -295,7 +319,7 @@ function parseStreamingMarkdown(text: string) {
 
   // Regex to match [File: filename.ext] followed by code blocks
   const fileRegex =
-    /\[File:\s*([^\]]+)\][\s\r\n]*```(html|css|javascript|js|json)[\s\r\n]*([\s\S]*?)(?:```|$)/gi;
+    /\[File:\s*([^\]]+)\][\s\r\n]*```(html|css|javascript|js|typescript|ts|jsx|tsx|vue|json|markdown|md)[\s\r\n]*([\s\S]*?)(?:```|$)/gi;
 
   let match;
   let thinking = "";
@@ -335,12 +359,14 @@ function parseStreamingMarkdown(text: string) {
     const fileName = match[1].trim();
     let lang = match[2].toLowerCase();
     if (lang === "js") lang = "javascript";
+    if (lang === "ts") lang = "typescript";
+    if (lang === "md") lang = "markdown";
     const fileContent = match[3].trim();
 
     files.push({
       name: fileName,
       content: fileContent,
-      language: lang as "html" | "css" | "javascript" | "json",
+      language: lang as ProjectFileLanguage,
     });
   }
 
@@ -1277,10 +1303,14 @@ function PlaygroundContent() {
     const hasGeneratedFiles = Boolean(
       activeProject?.files?.length || activeProject?.landingPageHtml,
     );
+    const hasStackChoice = hasImplementationStackChoice(
+      existingMessages,
+      promptToSend,
+    );
     const generationMode =
       !hasGeneratedFiles &&
       !shouldForceBuild(promptToSend) &&
-      interviewQuestionCount < MIN_INTERVIEW_QUESTIONS
+      (interviewQuestionCount < MIN_INTERVIEW_QUESTIONS || !hasStackChoice)
         ? "interview"
         : "build";
 
