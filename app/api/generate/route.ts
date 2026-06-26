@@ -230,6 +230,16 @@ Landing Page Guidelines:
       if (fs.existsSync(grillMePath)) {
         systemInstruction += `\n\nACTIVE INTERVIEW SKILL RULES (grill-me):\n${fs.readFileSync(grillMePath, "utf-8")}`;
       }
+    } else if (generationMode === "plan") {
+      const planSkillPath = path.join(process.cwd(), "skills", "writing-plans.md");
+      if (fs.existsSync(planSkillPath)) {
+        systemInstruction += `\n\nACTIVE PLAN SKILL RULES (writing-plans):\n${fs.readFileSync(planSkillPath, "utf-8")}`;
+      }
+    } else if (generationMode === "diagram") {
+      const diagramSkillPath = path.join(process.cwd(), "skills", "mermaid-diagrams.md");
+      if (fs.existsSync(diagramSkillPath)) {
+        systemInstruction += `\n\nACTIVE DIAGRAM SKILL RULES (mermaid-diagrams):\n${fs.readFileSync(diagramSkillPath, "utf-8")}`;
+      }
     }
 
     let userPrompt = "";
@@ -258,6 +268,45 @@ Conversation so far:
 ${conversationContext || "No previous interview answers yet."}
 
 Ask the single next best question. If the user has not chosen tools/libraries yet, ask that stack/tools question now. If the implementation stack is already clear but image/assets source is unclear for an image-heavy site, ask the image/assets question next. Do not build yet.`;
+    } else if (generationMode === "plan") {
+      systemInstruction += `
+
+ACTIVE MODE: PLAN GENERATION.
+You are NOT allowed to generate website files or code yet.
+Do NOT output [File: ...] blocks, HTML, CSS, JavaScript, or implementation code.
+You must synthesize the user prompt and prior chat/interview answers into a detailed, structured design and implementation plan.
+Follow the ACTIVE PLAN SKILL RULES (writing-plans) for required sections.
+Return only the plan in clear markdown.`;
+
+      userPrompt = `Generate a detailed design and implementation plan for the landing page.
+Product/Service Description: "${prompt}"
+Tone of Voice: "${tone}"
+Color Theme Style: "${colorTheme}"
+Target Audience: "${targetAudience}"
+
+Interview answers and prior context:
+${conversationContext || "No prior interview context was provided."}`;
+    } else if (generationMode === "diagram") {
+      systemInstruction += `
+
+ACTIVE MODE: DIAGRAM GENERATION.
+You are NOT allowed to generate website files or code yet.
+Do NOT output [File: ...] blocks, HTML, CSS, JavaScript, or implementation code.
+You must generate 2-3 Mermaid diagrams representing the landing page architecture, user flow, or component hierarchy based on the plan.
+Follow the ACTIVE DIAGRAM SKILL RULES (mermaid-diagrams) formatting rules:
+1. Each diagram must be prefixed with [Diagram: Title of Diagram] on its own line.
+2. The diagram code must be wrapped inside a standard markdown \`\`\`mermaid code block.
+3. Node labels must be simple strings without parentheses, brackets, or HTML tags inside them.
+Return only the diagrams in clear markdown.`;
+
+      userPrompt = `Generate the Mermaid diagrams for the project based on the design/implementation plan.
+Product/Service Description: "${prompt}"
+Tone of Voice: "${tone}"
+Color Theme Style: "${colorTheme}"
+Target Audience: "${targetAudience}"
+
+Interview answers and prior context:
+${conversationContext || "No prior interview context was provided."}`;
     } else if (body.files && body.files.length > 0) {
       userPrompt = `You are refining an existing web project based on a new user instruction.
 Current Project Files:

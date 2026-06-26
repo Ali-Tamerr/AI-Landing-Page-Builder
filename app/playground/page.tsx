@@ -131,6 +131,8 @@ interface WebProject {
   colorTheme: string;
   targetAudience: string;
   landingPageHtml: string;
+  plan?: string;
+  diagrams?: { title: string; mermaid: string }[];
   files?: ProjectFile[];
   activeFileName?: string;
   messages: ChatMessage[];
@@ -881,6 +883,19 @@ function parseQuestionData(raw: string): QuestionData | null {
   }
 }
 
+function parseDiagrams(text: string): { title: string; mermaid: string }[] {
+  const diagrams: { title: string; mermaid: string }[] = [];
+  const regex = /\[Diagram:\s*([^\]]+)\][\s\r\n]*```mermaid[\s\r\n]*([\s\S]*?)(?:```|$)/gi;
+  let match;
+  while ((match = regex.exec(text)) !== null) {
+    diagrams.push({
+      title: match[1].trim(),
+      mermaid: match[2].trim(),
+    });
+  }
+  return diagrams;
+}
+
 function InteractiveQuestionCard({
   data,
   isAnswered,
@@ -1056,6 +1071,7 @@ function PlaygroundContent() {
 
   // Workspace controls
   const [activeTab, setActiveTab] = useState<"preview" | "code">("preview");
+  const [planActiveTab, setPlanActiveTab] = useState<"plan" | "diagrams">("plan");
   const [iframeWidth, setIframeWidth] = useState<"100%" | "768px" | "375px">(
     "100%",
   );
@@ -1173,6 +1189,69 @@ function PlaygroundContent() {
       await setDoc(projectDocRef, project);
     } catch (e) {
       console.error("Failed to sync project to firestore:", e);
+    }
+  };
+
+  const generateDiagramsForProject = async (
+    projectId: string,
+    originalPrompt: string,
+    chatHistory: ChatMessage[],
+  ) => {
+    try {
+      const response = await fetch("/api/generate/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt: originalPrompt,
+          tone,
+          colorTheme,
+          targetAudience,
+          selectedSkill,
+          generationMode: "diagram",
+          chatHistory: chatHistory.map(({ sender, text }) => ({
+            sender,
+            text,
+          })),
+        }),
+      });
+
+      if (!response.ok) return;
+      const reader = response.body?.getReader();
+      if (!reader) return;
+
+      const decoder = new TextDecoder();
+      let accumulatedText = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        accumulatedText += decoder.decode(value, { stream: true });
+        const parsedDiagrams = parseDiagrams(accumulatedText);
+
+        setProjects((prev) =>
+          prev.map((p) => {
+            if (p.id === projectId) {
+              return {
+                ...p,
+                diagrams: parsedDiagrams,
+              };
+            }
+            return p;
+          }),
+        );
+      }
+
+      // Save final state with diagrams
+      setProjects((prev) => {
+        const proj = prev.find((p) => p.id === projectId);
+        if (proj) {
+          saveProjectToFirestore(proj);
+        }
+        return prev;
+      });
+    } catch (err) {
+      console.error("Diagram generation failed:", err);
     }
   };
 
@@ -1308,16 +1387,27 @@ function PlaygroundContent() {
       existingMessages,
       promptToSend,
     );
-    const generationMode =
-      !hasGeneratedFiles &&
-      !shouldForceBuild(promptToSend) &&
-      (interviewQuestionCount < MIN_INTERVIEW_QUESTIONS || !hasStackChoice)
-        ? "interview"
-        : "build";
+    const isInterviewComplete = interviewQuestionCount >= MIN_INTERVIEW_QUESTIONS && hasStackChoice;
+    const hasPlan = Boolean(activeProject?.plan);
+
+    let generationMode: "interview" | "plan" | "build" | "diagram" = "interview";
+
+    if (hasGeneratedFiles) {
+      generationMode = "build";
+    } else if (shouldForceBuild(promptToSend)) {
+      generationMode = "build";
+    } else if (!isInterviewComplete) {
+      generationMode = "interview";
+    } else if (!hasPlan) {
+      generationMode = "plan";
+    } else {
+      generationMode = "build";
+    }
 
     setIsGenerating(true);
     setIsInterviewing(generationMode === "interview");
-    setLoaderMinimized(generationMode === "interview");
+    setPlanActiveTab("plan");
+    setLoaderMinimized(generationMode === "interview" || generationMode === "plan");
     setError("");
     if (!overridePrompt) setChatInput("");
 
@@ -1349,7 +1439,9 @@ function PlaygroundContent() {
       text:
         generationMode === "interview"
           ? "Reading your request and preparing the first design question..."
-          : "Analyzing request & generating layout...",
+          : generationMode === "plan"
+            ? "Creating a design and implementation plan..."
+            : "Analyzing request & generating layout...",
       createdAt: Date.now(),
     };
 
@@ -1443,11 +1535,16 @@ function PlaygroundContent() {
         if (done) break;
 
         const chunk = decoder.decode(value, { stream: true });
+        // eslint-disable-next-line react-hooks/immutability
         accumulatedText += chunk;
 
         const parsed = parseStreamingMarkdown(accumulatedText);
         currentThinking =
-          generationMode === "interview" ? accumulatedText : parsed.thinking;
+          generationMode === "interview"
+            ? accumulatedText
+            : generationMode === "plan"
+              ? accumulatedText
+              : parsed.thinking;
         if (parsed.files && parsed.files.length > 0) {
           // eslint-disable-next-line react-hooks/immutability
           currentFiles = parsed.files;
@@ -1465,7 +1562,9 @@ function PlaygroundContent() {
             currentThinking ||
             (generationMode === "interview"
               ? "Preparing the next design question..."
-              : "Generating website code..."),
+              : generationMode === "plan"
+                ? "Generating plan..."
+                : "Generating website code..."),
           createdAt: Date.now(),
         };
 
@@ -1482,10 +1581,11 @@ function PlaygroundContent() {
               const activeFile = p.activeFileName || "index.html";
               return {
                 ...p,
-                files: currentFiles,
-                landingPageHtml: shouldUpdateIframe
+                files: generationMode === "build" ? currentFiles : p.files,
+                landingPageHtml: generationMode === "build" && shouldUpdateIframe
                   ? compileProjectPreview(currentFiles, activeFile)
                   : p.landingPageHtml,
+                plan: generationMode === "plan" ? accumulatedText : p.plan,
                 messages: [...updatedMessages, streamingAiMsg],
               };
             }
@@ -1499,10 +1599,12 @@ function PlaygroundContent() {
         id: aiMsgId,
         sender: "assistant",
         text:
-          currentThinking ||
-          (generationMode === "interview"
-            ? accumulatedText || "Interview question ready."
-            : "Website generation complete!"),
+          generationMode === "plan"
+            ? "I have generated an implementation plan for your review. Please look at the Plan and Diagrams tabs on the right side!"
+            : currentThinking ||
+              (generationMode === "interview"
+                ? accumulatedText || "Interview question ready."
+                : "Website generation complete!"),
         createdAt: Date.now(),
       };
 
@@ -1515,8 +1617,9 @@ function PlaygroundContent() {
       if (!isNewProject && activeProject) {
         const refinedProject: WebProject = {
           ...activeProject,
-          files: currentFiles,
-          landingPageHtml: finalPreviewHtml,
+          files: generationMode === "build" ? currentFiles : activeProject.files,
+          landingPageHtml: generationMode === "build" ? finalPreviewHtml : activeProject.landingPageHtml,
+          plan: generationMode === "plan" ? accumulatedText : activeProject.plan,
           messages: finalMessages,
         };
         const updatedList = projects.map((p) =>
@@ -1524,6 +1627,10 @@ function PlaygroundContent() {
         );
         await syncProjects(updatedList);
         await saveProjectToFirestore(refinedProject);
+
+        if (generationMode === "plan") {
+          generateDiagramsForProject(tempProjectId, promptToSend, finalMessages);
+        }
       } else {
         const newProject: WebProject = {
           id: tempProjectId,
@@ -1533,8 +1640,9 @@ function PlaygroundContent() {
           tone,
           colorTheme,
           targetAudience,
-          files: currentFiles,
-          landingPageHtml: finalPreviewHtml,
+          files: generationMode === "build" ? currentFiles : [],
+          landingPageHtml: generationMode === "build" ? finalPreviewHtml : "",
+          plan: generationMode === "plan" ? accumulatedText : "",
           activeFileName: "index.html",
           messages: finalMessages,
           createdAt: Date.now(),
@@ -1546,6 +1654,10 @@ function PlaygroundContent() {
           saveProjectToFirestore(newProject);
           return updatedList;
         });
+
+        if (generationMode === "plan") {
+          generateDiagramsForProject(tempProjectId, promptToSend, finalMessages);
+        }
       }
     } catch (err: unknown) {
       const errMsg =
@@ -2419,6 +2531,123 @@ function PlaygroundContent() {
                     </div>
                   </div>
                 )
+              ) : activeProject?.plan ? (
+                <div className="w-full h-full flex flex-col bg-white rounded-2xl border border-gray-250/80 overflow-hidden shadow-sm relative">
+                  {/* Tabs header */}
+                  <div className="bg-gray-50 px-4 py-3 border-b border-gray-200/80 flex items-center justify-between shrink-0">
+                    <div className="flex border border-brand-border rounded-xl p-0.5 bg-gray-50/50">
+                      <button
+                        type="button"
+                        onClick={() => setPlanActiveTab("plan")}
+                        className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${
+                          planActiveTab === "plan"
+                            ? "bg-white text-gray-900 shadow-3xs"
+                            : "text-gray-500 hover:text-gray-900"
+                        }`}
+                      >
+                        Plan
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPlanActiveTab("diagrams")}
+                        className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${
+                          planActiveTab === "diagrams"
+                            ? "bg-white text-gray-900 shadow-3xs"
+                            : "text-gray-500 hover:text-gray-900"
+                        }`}
+                      >
+                        Diagrams
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Tab Contents */}
+                  <div className="flex-grow overflow-y-auto p-6 scrollbar-thin bg-slate-50/30">
+                    {planActiveTab === "plan" ? (
+                      <div className="prose prose-sm max-w-none text-slate-700">
+                        <ReactMarkdown
+                          components={{
+                            h1: ({ ...props }) => <h1 className="text-lg font-black text-slate-900 mt-4 mb-2" {...props} />,
+                            h2: ({ ...props }) => <h2 className="text-base font-bold text-slate-950 mt-4 mb-2" {...props} />,
+                            h3: ({ ...props }) => <h3 className="text-sm font-bold text-slate-900 mt-3 mb-1" {...props} />,
+                            p: ({ ...props }) => <p className="text-xs leading-relaxed text-slate-650 mb-3" {...props} />,
+                            ul: ({ ...props }) => <ul className="list-disc pl-4 mb-3 space-y-1 text-xs" {...props} />,
+                            ol: ({ ...props }) => <ol className="list-decimal pl-4 mb-3 space-y-1 text-xs" {...props} />,
+                            li: ({ ...props }) => <li className="text-slate-700" {...props} />,
+                            strong: ({ ...props }) => <strong className="font-extrabold text-slate-950" {...props} />,
+                          }}
+                        >
+                          {activeProject.plan}
+                        </ReactMarkdown>
+                      </div>
+                    ) : (
+                      <div className="space-y-6">
+                        {activeProject.diagrams && activeProject.diagrams.length > 0 ? (
+                          activeProject.diagrams.map((diag, index) => (
+                            <div key={index} className="bg-white border border-gray-200 rounded-xl p-4 shadow-3xs">
+                              <h4 className="text-xs font-bold text-slate-800 mb-2">{diag.title}</h4>
+                              <div className="h-[280px] bg-slate-50 rounded-lg overflow-hidden border border-gray-100 relative">
+                                <iframe
+                                  srcDoc={`
+                                    <!DOCTYPE html>
+                                    <html>
+                                    <head>
+                                      <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+                                      <script>
+                                        window.addEventListener('error', function(e) {
+                                          document.body.innerHTML = '<div style="color: #ef4444; font-family: monospace; font-size: 11px; padding: 10px;"><strong>Mermaid Render Error:</strong><pre style="margin-top: 5px; white-space: pre-wrap;">' + e.message + '</pre></div>';
+                                        });
+                                        mermaid.initialize({ startOnLoad: true, theme: 'default', securityLevel: 'loose' });
+                                      </script>
+                                      <style>
+                                        body { margin: 0; padding: 16px; background: #fafafa; display: flex; justify-content: center; }
+                                        .mermaid { width: 100%; display: flex; justify-content: center; }
+                                      </style>
+                                    </head>
+                                    <body>
+                                      <div class="mermaid">
+                                        ${diag.mermaid}
+                                      </div>
+                                    </body>
+                                    </html>
+                                  `}
+                                  className="w-full h-full border-none"
+                                  sandbox="allow-scripts allow-same-origin"
+                                />
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="text-center py-12 text-slate-400">
+                            <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-brand-primary" />
+                            <p className="text-xs">Generating diagrams in background...</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Proceed & Review Actions footer */}
+                  <div className="p-4 border-t border-gray-150 bg-gray-50 flex items-center justify-end gap-3 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        chatInputRef.current?.focus();
+                      }}
+                      className="px-4 py-2 border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 rounded-xl text-xs font-semibold shadow-3xs transition-all"
+                    >
+                      Refine Plan (Use Chat)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleSendMessage(undefined, "proceed")}
+                      className="px-5 py-2.5 bg-brand-primary hover:bg-brand-primary-dark text-white rounded-xl text-xs font-bold shadow-xs hover:shadow-sm transition-all flex items-center gap-1.5"
+                    >
+                      <span>Proceed to Build</span>
+                      <Sparkles className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
               ) : null}
             </div>
           </div>
