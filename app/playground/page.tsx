@@ -2222,68 +2222,7 @@ function PlaygroundContent() {
               </div>
             )}
 
-            {/* Project Files Selector Bar */}
-            {activeProject &&
-              activeProject.files &&
-              activeProject.files.length > 0 && (
-                <div className="bg-gray-50 border-b border-brand-border px-4 py-2 flex items-center gap-2 overflow-x-auto scrollbar-none shrink-0">
-                  <span className="text-[10px] font-bold text-gray-400 uppercase mr-2 shrink-0">
-                    Files:
-                  </span>
-                  {activeProject.files.map((file) => {
-                    const isActive =
-                      (activeProject.activeFileName || "index.html") ===
-                      file.name;
-                    const isHtml = file.name.endsWith(".html");
-                    const isCss = file.name.endsWith(".css");
-                    const isJs =
-                      file.name.endsWith(".js") ||
-                      file.name.endsWith(".javascript");
-                    const isJson = file.name.endsWith(".json");
 
-                    return (
-                      <button
-                        key={file.name}
-                        onClick={() => {
-                          setProjects((prev) =>
-                            prev.map((p) => {
-                              if (p.id === activeProject.id) {
-                                return {
-                                  ...p,
-                                  activeFileName: file.name,
-                                  landingPageHtml: compileProjectPreview(
-                                    p.files || [],
-                                    file.name,
-                                  ),
-                                };
-                              }
-                              return p;
-                            }),
-                          );
-                        }}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all border shrink-0 ${
-                          isActive
-                            ? "bg-brand-primary/10 border-brand-primary text-brand-primary font-bold shadow-3xs"
-                            : "bg-white border-brand-border text-gray-600 hover:text-gray-900"
-                        }`}
-                      >
-                        {isHtml ? (
-                          <HtmlIcon className="w-3.5 h-3.5 shrink-0" />
-                        ) : isCss ? (
-                          <CssIcon className="w-3.5 h-3.5 shrink-0" />
-                        ) : isJs ? (
-                          <JsIcon className="w-3.5 h-3.5 rounded-xs shrink-0" />
-                        ) : isJson ? (
-                          <FileJson className="w-3.5 h-3.5 text-purple-500 shrink-0" />
-                        ) : (
-                          <FileText className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-                        )}
-                        {file.name}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
 
             {/* Sandbox Canvas */}
             <div className="flex-1 p-4 lg:p-6 flex justify-center items-center overflow-hidden relative w-full h-full">
