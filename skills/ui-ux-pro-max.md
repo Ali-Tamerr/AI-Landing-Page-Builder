@@ -115,7 +115,14 @@ Get implementation-specific best practices. If user doesn't specify a stack, **d
 python3 skills/ui-ux-pro-max/scripts/search.py "<keyword>" --stack html-tailwind
 ```
 
-Available stacks: `html-tailwind`, `react`, `nextjs`, `vue`, `svelte`, `swiftui`, `react-native`, `flutter`, `shadcn`, `jetpack-compose`
+### Step 5: Implementation & Quality Check via Impeccable (REQUIRED)
+
+When writing or iterating on the frontend code, you must execute the `/impeccable` skill instructions alongside the `ui-ux-pro-max` guidelines. Specifically, apply these core rules:
+- **Contrast Verification**: Body text contrast must be ≥4.5:1. Avoid light gray text on near-white backgrounds.
+- **Typography Constraints**: Cap body lines at 65–75ch. Display H1 letter-spacing must be ≥ -0.04em (never tighter). Use `text-wrap: balance` for h1-h3.
+- **Color Strategy**: Use OKLCH. Avoid warm-neutral "cream/beige" default backgrounds. Use a solid saturated brand color, true off-white at chroma 0, or custom brand-hue neutrals.
+- **Motion Guidelines**: Animations must be intentional, use exponential ease-out curves, and always provide a `@media (prefers-reduced-motion: reduce)` fallback.
+- **Absolute Bans**: Refuse SaaS-cliché hero-metric templates, glassmorphism-by-default, side-stripe borders, gradient text, small uppercase eyebrows above every section, numbered section markers, sketchy SVG illustrations, diagonal stripe backgrounds, and overly rounded card corners (radius must be 12-16px max).
 
 ---
 
