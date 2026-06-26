@@ -1228,6 +1228,7 @@ function PlaygroundContent() {
   }, [currentProjectId]);
 
   const activeProject = projects.find((p) => p.id === currentProjectId);
+  const hasProjectContent = !!(activeProject && (activeProject.landingPageHtml || (activeProject.files && activeProject.files.length > 0)));
 
   useEffect(() => {
     const input = chatInputRef.current;
@@ -1765,14 +1766,16 @@ function PlaygroundContent() {
           {/* LEFT PANE: Chat & Generation Inputs */}
           <div className="w-full lg:w-[480px] border-r border-brand-border bg-white flex flex-col h-full shrink-0">
             {/* Top Toolbar / Configuration */}
-            <div className="p-4 border-b border-brand-border flex items-center justify-between shrink-0 bg-gray-50/60">
-              <div className="flex items-center gap-2">
-                <Globe className="w-4 h-4 text-brand-primary" />
-                <span className="font-bold text-xs uppercase tracking-wider text-gray-500">
-                  {activeProject ? "Refining Site Layout" : "Create New Site"}
-                </span>
+            {activeProject && (
+              <div className="p-4 border-b border-brand-border flex items-center justify-between shrink-0 bg-gray-50/60">
+                <div className="flex items-center gap-2">
+                  <Globe className="w-4 h-4 text-brand-primary" />
+                  <span className="font-bold text-xs uppercase tracking-wider text-gray-500">
+                    Refining Site Layout
+                  </span>
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Chat Messages Log */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin bg-slate-50/30">
@@ -2021,89 +2024,91 @@ function PlaygroundContent() {
           {/* RIGHT PANE: Code & Website Live Preview Viewport */}
           <div className="flex-1 flex flex-col h-full overflow-hidden bg-gray-100/50">
             {/* Top Preview Toolbar */}
-            <div className="p-3.5 border-b border-brand-border bg-white flex flex-col sm:flex-row items-center justify-between gap-4 shrink-0">
-              {/* Responsive Width toggles */}
-              <div className="flex items-center gap-4">
-                <div className="flex border border-brand-border rounded-xl p-0.5 bg-gray-50">
-                  <ViewportButton
-                    active={iframeWidth === "100%"}
-                    onClick={() => setIframeWidth("100%")}
-                    icon={<Monitor className="w-4 h-4" />}
-                    title="Desktop width"
-                  />
-                  <ViewportButton
-                    active={iframeWidth === "768px"}
-                    onClick={() => setIframeWidth("768px")}
-                    icon={<Tablet className="w-4 h-4" />}
-                    title="Tablet width"
-                  />
-                  <ViewportButton
-                    active={iframeWidth === "375px"}
-                    onClick={() => setIframeWidth("375px")}
-                    icon={<Smartphone className="w-4 h-4" />}
-                    title="Mobile width"
-                  />
-                </div>
-
-                {activeProject && (
-                  <span className="text-[10px] font-bold uppercase px-2 py-0.5 bg-gray-100 text-gray-500 rounded-md">
-                    Viewport:{" "}
-                    {iframeWidth === "100%"
-                      ? "Desktop"
-                      : iframeWidth === "768px"
-                        ? "Tablet"
-                        : "Mobile"}
-                  </span>
-                )}
-              </div>
-
-              {/* Mode switch (Live Preview / Code view) */}
-              <div className="flex items-center gap-3">
-                <div className="flex border border-brand-border rounded-xl p-0.5 bg-gray-50">
-                  <TabButton
-                    active={activeTab === "preview"}
-                    onClick={() => setActiveTab("preview")}
-                    icon={<Eye className="w-3.5 h-3.5" />}
-                    label="Live Preview"
-                  />
-                  <TabButton
-                    active={activeTab === "code"}
-                    onClick={() => setActiveTab("code")}
-                    icon={<Code className="w-3.5 h-3.5" />}
-                    label="Code View"
-                  />
-                </div>
-
-                {activeProject && (
-                  <div className="flex items-center gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() =>
-                        handleCopyText(activeProject.landingPageHtml, "html")
-                      }
-                      className="rounded-lg h-9 border-brand-border text-xs font-semibold text-gray-600 bg-white"
-                    >
-                      {copiedStates["html"] ? "Copied" : "Copy"}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() =>
-                        handleDownloadFile(
-                          activeProject.landingPageHtml,
-                          "index.html",
-                          "text/html",
-                        )
-                      }
-                      className="rounded-lg h-9 border-brand-border text-xs font-semibold text-gray-600 bg-white"
-                    >
-                      <Download className="w-3.5 h-3.5" />
-                    </Button>
+            {hasProjectContent && (
+              <div className="p-3.5 border-b border-brand-border bg-white flex flex-col sm:flex-row items-center justify-between gap-4 shrink-0">
+                {/* Responsive Width toggles */}
+                <div className="flex items-center gap-4">
+                  <div className="flex border border-brand-border rounded-xl p-0.5 bg-gray-50">
+                    <ViewportButton
+                      active={iframeWidth === "100%"}
+                      onClick={() => setIframeWidth("100%")}
+                      icon={<Monitor className="w-4 h-4" />}
+                      title="Desktop width"
+                    />
+                    <ViewportButton
+                      active={iframeWidth === "768px"}
+                      onClick={() => setIframeWidth("768px")}
+                      icon={<Tablet className="w-4 h-4" />}
+                      title="Tablet width"
+                    />
+                    <ViewportButton
+                      active={iframeWidth === "375px"}
+                      onClick={() => setIframeWidth("375px")}
+                      icon={<Smartphone className="w-4 h-4" />}
+                      title="Mobile width"
+                    />
                   </div>
-                )}
+
+                  {activeProject && (
+                    <span className="text-[10px] font-bold uppercase px-2 py-0.5 bg-gray-100 text-gray-500 rounded-md">
+                      Viewport:{" "}
+                      {iframeWidth === "100%"
+                        ? "Desktop"
+                        : iframeWidth === "768px"
+                          ? "Tablet"
+                          : "Mobile"}
+                    </span>
+                  )}
+                </div>
+
+                {/* Mode switch (Live Preview / Code view) */}
+                <div className="flex items-center gap-3">
+                  <div className="flex border border-brand-border rounded-xl p-0.5 bg-gray-50">
+                    <TabButton
+                      active={activeTab === "preview"}
+                      onClick={() => setActiveTab("preview")}
+                      icon={<Eye className="w-3.5 h-3.5" />}
+                      label="Live Preview"
+                    />
+                    <TabButton
+                      active={activeTab === "code"}
+                      onClick={() => setActiveTab("code")}
+                      icon={<Code className="w-3.5 h-3.5" />}
+                      label="Code View"
+                    />
+                  </div>
+
+                  {activeProject && (
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() =>
+                          handleCopyText(activeProject.landingPageHtml, "html")
+                        }
+                        className="rounded-lg h-9 border-brand-border text-xs font-semibold text-gray-600 bg-white"
+                      >
+                        {copiedStates["html"] ? "Copied" : "Copy"}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() =>
+                          handleDownloadFile(
+                            activeProject.landingPageHtml,
+                            "index.html",
+                            "text/html",
+                          )
+                        }
+                        className="rounded-lg h-9 border-brand-border text-xs font-semibold text-gray-600 bg-white"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Project Files Selector Bar */}
             {activeProject &&
@@ -2244,7 +2249,7 @@ function PlaygroundContent() {
                 </div>
               )}
 
-              {activeProject ? (
+              {hasProjectContent ? (
                 activeTab === "preview" ? (
                   <div
                     className="h-full bg-white rounded-2xl border border-gray-250/80 overflow-hidden shadow-sm transition-all duration-300 relative flex flex-col"
@@ -2414,20 +2419,7 @@ function PlaygroundContent() {
                     </div>
                   </div>
                 )
-              ) : (
-                <div className="text-center text-gray-400 p-8">
-                  <div className="w-16 h-16 bg-white border border-brand-border rounded-3xl flex items-center justify-center mx-auto mb-4 shadow-3xs text-gray-300">
-                    <Globe className="w-8 h-8" />
-                  </div>
-                  <h3 className="text-sm font-bold text-gray-600 mb-1">
-                    Web Preview Canvas
-                  </h3>
-                  <p className="text-xs text-gray-400 max-w-xs leading-relaxed">
-                    Once you submit a layout description, a live responsive
-                    preview frame will be compiled and displayed here.
-                  </p>
-                </div>
-              )}
+              ) : null}
             </div>
           </div>
         </div>
