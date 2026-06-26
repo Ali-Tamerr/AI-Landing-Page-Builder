@@ -15,7 +15,13 @@ const firebaseConfig = {
 const isBrowser = typeof window !== 'undefined';
 
 const app = isBrowser
-  ? (getApps().length > 0 ? getApp() : initializeApp(firebaseConfig))
+  ? (() => {
+      console.log("Initializing Firebase in browser with config:", {
+        apiKey: firebaseConfig.apiKey ? "PRESENT" : "MISSING/UNDEFINED",
+        projectId: firebaseConfig.projectId
+      });
+      return getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+    })()
   : null;
 
 const auth = (app ? getAuth(app) : null) as Auth;

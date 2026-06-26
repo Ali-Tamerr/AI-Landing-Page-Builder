@@ -21,6 +21,18 @@ const nextConfig: NextConfig = {
   // Keep route output stable across Cloudflare and optional static exports.
   trailingSlash: true,
 
+  env: {
+    NEXT_PUBLIC_FIREBASE_API_KEY: (() => {
+      console.log("BUILD TIME: NEXT_PUBLIC_FIREBASE_API_KEY =", process.env.NEXT_PUBLIC_FIREBASE_API_KEY);
+      return process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "";
+    })(),
+    NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "",
+    NEXT_PUBLIC_FIREBASE_PROJECT_ID: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "",
+    NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || "",
+    NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "",
+    NEXT_PUBLIC_FIREBASE_APP_ID: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "",
+  },
+
   webpack: (config, { isServer }) => {
     if (isServer) {
       // Ignore firebase on the server to prevent EvalErrors in Cloudflare Workers
